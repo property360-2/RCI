@@ -27,10 +27,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Custom User Model
+AUTH_USER_MODEL = 'users.User'
 
 # Application definition
 
 INSTALLED_APPS = [
+    # Django core apps
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -53,6 +56,19 @@ INSTALLED_APPS = [
     "grades",
     "audit",
     "archive_app",
+
+    # Custom apps
+    "core",           # Core mixins and utilities
+    "users",          # User authentication and roles
+    "terms",          # Academic terms/semesters
+    "courses",        # Degree programs (BSCS, BSBA, etc.)
+    "subjects",       # Individual subjects/courses (COMP101, etc.)
+    "sections",       # Class sections with schedules
+    "students",       # Student records
+    "enrollments",    # Student enrollments in sections
+    "grades",         # Grade records and INC tracking
+    "archive_app",    # Archive management
+    "audit",          # Audit trail logging
 ]
 
 MIDDLEWARE = [
@@ -71,7 +87,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],  # Root templates directory
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
