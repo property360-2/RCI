@@ -1,0 +1,76 @@
+<!-- templates/layouts/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Richwell College Portal v3.0">
+    <title>{% block title %}Richwell College Portal{% endblock %}</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Alpine.js for small interactions -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    
+    {% if user.is_authenticated %}
+        {% include 'organisms/navbar.html' %}
+    {% endif %}
+
+    <div class="{% if user.is_authenticated %}flex{% endif %}">
+        {% if user.is_authenticated %}
+            {% include 'organisms/sidebar.html' %}
+        {% endif %}
+
+        <main class="flex-1 {% if user.is_authenticated %}p-6{% else %}w-full{% endif %}">
+            <!-- Messages/Alerts -->
+            <div id="messages" class="mb-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="rounded-lg p-4 mb-2 
+                            {% if message.tags == 'error' %}bg-red-100 text-red-800
+                            {% elif message.tags == 'success' %}bg-green-100 text-green-800
+                            {% elif message.tags == 'warning' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <!-- Page Content -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- HTMX Events -->
+    <script>
+        // Global HTMX event handlers
+        document.body.addEventListener('htmx:beforeSwap', function(evt) {
+            if(evt.detail.xhr.status === 422) {
+                // Show validation errors
+                evt.detail.shouldSwap = true;
+                evt.detail.isError = false;
+            }
+        });
+
+        document.body.addEventListener('htmx:responseError', function(evt) {
+            alert('An error occurred. Please try again.');
+        });
+    </script>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!-- templates/pages/admission/dashboard.html -->
+{% extends 'layouts/base.html' %}
+
+{% block title %}Admission Dashboard - Richwell College{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Admission Office</h1>
+        <p class="text-gray-600 mt-2">Welcome, {{ user.get_full_name|default:user.username }}</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
+            <h3 class="text-2xl font-bold">156</h3>
+            <p class="text-sm opacity-90 mt-1">New Applicants</p>
+            <p class="text-xs opacity-75 mt-2">This week</p>
+        </div>
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
+            <h3 class="text-2xl font-bold">2,847</h3>
+            <p class="text-sm opacity-90 mt-1">Enrolled Students</p>
+            <p class="text-xs opacity-75 mt-2">Current term</p>
+        </div>
+        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
+            <h3 class="text-2xl font-bold">42</h3>
+            <p class="text-sm opacity-90 mt-1">Pending Enrollment</p>
+            <p class="text-xs opacity-75 mt-2">Awaiting verification</p>
+        </div>
+        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
+            <h3 class="text-2xl font-bold">342</h3>
+            <p class="text-sm opacity-90 mt-1">Available Slots</p>
+            <p class="text-xs opacity-75 mt-2">Across all sections</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Enrollment Actions -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-gray-900">Quick Enrollment</h2>
+                    <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center space-x-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span>New Enrollment</span>
+                    </button>
+                </div>
+                
+                <!-- Search Student -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search Student</label>
+                    <div class="relative">
+                        <input type="text" 
+                               placeholder="Enter student ID or name..." 
+                               class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Programs -->
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Available Programs</h3>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition cursor-pointer">
+                            <p class="font-semibold text-gray-900">BSIT</p>
+                            <p class="text-sm text-gray-600">120 slots available</p>
+                        </div>
+                        <div class="p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition cursor-pointer">
+                            <p class="font-semibold text-gray-900">BSCS</p>
+                            <p class="text-sm text-gray-600">85 slots available</p>
+                        </div>
+                        <div class="p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition cursor-pointer">
+                            <p class="font-semibold text-gray-900">BSEd</p>
+                            <p class="text-sm text-gray-600">65 slots available</p>
+                        </div>
+                        <div class="p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition cursor-pointer">
+                            <p class="font-semibold text-gray-900">BSBA</p>
+                            <p class="text-sm text-gray-600">72 slots available</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Enrollments -->
+            <div class="bg-white rounded-xl shadow-lg">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900">Recent Enrollments</h2>
+                </div>
+                <div class="divide-y divide-gray-200">
+                    <div class="p-4 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-semibold text-gray-900">Juan Dela Cruz</p>
+                                <p class="text-sm text-gray-600">BSIT-1A • 18 units</p>
+                            </div>
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Completed</span>
+                        </div>
+                    </div>
+                    <div class="p-4 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-semibold text-gray-900">Maria Santos</p>
+                                <p class="text-sm text-gray-600">BSCS-2B • 21 units</p>
+                            </div>
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Completed</span>
+                        </div>
+                    </div>
+                    <div class="p-4 hover:bg-gray-50">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="font-semibold text-gray-900">Pedro Reyes</p>
+                                <p class="text-sm text-gray-600">BSEd-3A • 24 units</p>
+                            </div>
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Pending</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- Enrollment Status -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Enrollment Status</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Current Term</span>
+                        <span class="font-semibold">2024-2025 1st</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Status</span>
+                        <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Open</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Deadline</span>
+                        <span class="text-sm font-medium text-red-600">Dec 15, 2024</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">Quick Links</h3>
+                <div class="space-y-2">
+                    <a href="#" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm font-medium text-gray-700">
+                        View All Students
+                    </a>
+                    <a href="#" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm font-medium text-gray-700">
+                        Section Availability
+                    </a>
+                    <a href="#" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition text-sm font-medium text-gray-700">
+                        Enrollment Reports
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
