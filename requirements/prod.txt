@@ -1,0 +1,14 @@
+# Production requirements
+-r base.txt
+
+# Production server
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# Monitoring
+sentry-sdk==1.39.2
+
+# CDN/Storage (optional - uncomment as needed)
+# django-storages==1.14.2
+# boto3==1.34.25
+# django-cloudinary-storage==0.3.0
