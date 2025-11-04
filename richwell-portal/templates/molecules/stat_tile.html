@@ -1,0 +1,87 @@
+{# Stat Tile Molecule Component
+   Usage:
+   {% include "molecules/stat_tile.html" with
+      title="Total Students"
+      value="1,234"
+      icon="users"
+      trend="+12%"
+      trend_direction="up"
+      gradient_from="blue-500"
+      gradient_to="blue-600"
+      link="/students/"
+   %}
+
+   Gradient colors: blue, green, purple, red, yellow, cyan, indigo
+   Trend directions: up, down, neutral
+#}
+
+{# Set gradient defaults #}
+{% if gradient_from == None %}{% with gradient_from="blue-500" %}{% endwith %}{% endif %}
+{% if gradient_to == None %}{% with gradient_to="blue-600" %}{% endwith %}{% endif %}
+
+{% with gradient_class="from-"|add:gradient_from|add:" to-"|add:gradient_to %}
+
+<div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden {{ class }}">
+  {# Gradient header with icon #}
+  <div class="bg-gradient-to-r {{ gradient_class }} px-6 py-4">
+    <div class="flex items-center justify-between">
+      <div class="flex-1">
+        <p class="text-white text-opacity-90 text-sm font-medium">{{ title }}</p>
+        <p class="text-white text-3xl font-bold mt-1">{{ value }}</p>
+      </div>
+
+      {% if icon %}
+      <div class="flex-shrink-0 ml-4">
+        <div class="bg-white bg-opacity-20 rounded-lg p-3">
+          <span class="text-white">
+            {% include "atoms/icon.html" with name=icon size="xl" %}
+          </span>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Body with trend and link #}
+  <div class="px-6 py-3 bg-gray-50">
+    <div class="flex items-center justify-between">
+      {# Trend indicator #}
+      {% if trend %}
+      <div class="flex items-center gap-1.5">
+        {% if trend_direction == "up" %}
+          <span class="text-green-600">
+            {% include "atoms/icon.html" with name="arrow-up" size="sm" %}
+          </span>
+          <span class="text-sm font-medium text-green-600">{{ trend }}</span>
+          <span class="text-sm text-gray-500">{{ trend_label|default:"from last month" }}</span>
+        {% elif trend_direction == "down" %}
+          <span class="text-red-600">
+            {% include "atoms/icon.html" with name="arrow-down" size="sm" %}
+          </span>
+          <span class="text-sm font-medium text-red-600">{{ trend }}</span>
+          <span class="text-sm text-gray-500">{{ trend_label|default:"from last month" }}</span>
+        {% else %}
+          <span class="text-sm font-medium text-gray-600">{{ trend }}</span>
+          <span class="text-sm text-gray-500">{{ trend_label|default:"no change" }}</span>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="text-sm text-gray-500">{{ description }}</div>
+      {% endif %}
+
+      {# View link #}
+      {% if link %}
+      <a
+        href="{{ link }}"
+        class="text-sm font-medium text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+        {% if hx_get %}hx-get="{{ hx_get }}" hx-target="{{ hx_target|default:'#main-content' }}" hx-swap="{{ hx_swap|default:'innerHTML' }}"{% endif %}
+      >
+        <span>{{ link_text|default:"View all" }}</span>
+        {% include "atoms/icon.html" with name="chevron-right" size="sm" %}
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endwith %}

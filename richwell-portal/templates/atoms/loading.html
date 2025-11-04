@@ -1,0 +1,191 @@
+{# Loading Atom Component
+   Usage:
+   {% include "atoms/loading.html" with
+      type="spinner"
+      size="md"
+      text="Loading..."
+      color="blue"
+      center=true
+   %}
+
+   Types: spinner, dots, pulse, skeleton
+   Sizes: sm, md, lg, xl
+   Colors: blue, gray, white, current
+#}
+
+{# Set defaults #}
+{% if type == None %}{% with type="spinner" %}{% endwith %}{% endif %}
+{% if size == None %}{% with size="md" %}{% endwith %}{% endif %}
+{% if color == None %}{% with color="blue" %}{% endwith %}{% endif %}
+
+{# Color classes #}
+{% if color == "blue" %}
+  {% with color_class="text-blue-600" %}
+{% elif color == "gray" %}
+  {% with color_class="text-gray-600" %}
+{% elif color == "white" %}
+  {% with color_class="text-white" %}
+{% elif color == "current" %}
+  {% with color_class="text-current" %}
+{% else %}
+  {% with color_class="text-blue-600" %}
+{% endif %}
+
+{# Wrapper classes #}
+{% with wrapper_classes=class|default:"" %}
+{% if center %}
+  {% with wrapper_classes=wrapper_classes|add:" flex items-center justify-center" %}
+{% endif %}
+
+<div class="{{ wrapper_classes }}" {{ attrs|safe }}>
+  {% if type == "spinner" %}
+    {# Spinner loading #}
+    <div class="flex flex-col items-center gap-3">
+      {% if size == "sm" %}
+        <svg class="animate-spin h-5 w-5 {{ color_class }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      {% elif size == "md" %}
+        <svg class="animate-spin h-8 w-8 {{ color_class }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      {% elif size == "lg" %}
+        <svg class="animate-spin h-12 w-12 {{ color_class }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      {% elif size == "xl" %}
+        <svg class="animate-spin h-16 w-16 {{ color_class }}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      {% endif %}
+
+      {% if text %}
+        <p class="text-sm {{ color_class }} font-medium">{{ text }}</p>
+      {% endif %}
+    </div>
+
+  {% elif type == "dots" %}
+    {# Bouncing dots loading #}
+    <div class="flex flex-col items-center gap-3">
+      <div class="flex space-x-2">
+        {% if size == "sm" %}
+          <div class="w-2 h-2 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+          <div class="w-2 h-2 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+          <div class="w-2 h-2 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+        {% elif size == "md" %}
+          <div class="w-3 h-3 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+          <div class="w-3 h-3 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+          <div class="w-3 h-3 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+        {% elif size == "lg" %}
+          <div class="w-4 h-4 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+          <div class="w-4 h-4 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+          <div class="w-4 h-4 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+        {% elif size == "xl" %}
+          <div class="w-6 h-6 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 0ms;"></div>
+          <div class="w-6 h-6 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 150ms;"></div>
+          <div class="w-6 h-6 {{ color_class }} bg-current rounded-full animate-bounce" style="animation-delay: 300ms;"></div>
+        {% endif %}
+      </div>
+
+      {% if text %}
+        <p class="text-sm {{ color_class }} font-medium">{{ text }}</p>
+      {% endif %}
+    </div>
+
+  {% elif type == "pulse" %}
+    {# Pulsing circle loading #}
+    <div class="flex flex-col items-center gap-3">
+      {% if size == "sm" %}
+        <div class="relative w-12 h-12">
+          <div class="absolute inset-0 {{ color_class }} bg-current rounded-full opacity-75 animate-ping"></div>
+          <div class="relative w-12 h-12 {{ color_class }} bg-current rounded-full"></div>
+        </div>
+      {% elif size == "md" %}
+        <div class="relative w-16 h-16">
+          <div class="absolute inset-0 {{ color_class }} bg-current rounded-full opacity-75 animate-ping"></div>
+          <div class="relative w-16 h-16 {{ color_class }} bg-current rounded-full"></div>
+        </div>
+      {% elif size == "lg" %}
+        <div class="relative w-20 h-20">
+          <div class="absolute inset-0 {{ color_class }} bg-current rounded-full opacity-75 animate-ping"></div>
+          <div class="relative w-20 h-20 {{ color_class }} bg-current rounded-full"></div>
+        </div>
+      {% elif size == "xl" %}
+        <div class="relative w-24 h-24">
+          <div class="absolute inset-0 {{ color_class }} bg-current rounded-full opacity-75 animate-ping"></div>
+          <div class="relative w-24 h-24 {{ color_class }} bg-current rounded-full"></div>
+        </div>
+      {% endif %}
+
+      {% if text %}
+        <p class="text-sm {{ color_class }} font-medium">{{ text }}</p>
+      {% endif %}
+    </div>
+
+  {% elif type == "skeleton" %}
+    {# Skeleton loading for content placeholders #}
+    <div class="animate-pulse space-y-4">
+      {% if skeleton_type == "text" %}
+        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+        <div class="h-4 bg-gray-200 rounded"></div>
+        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+      {% elif skeleton_type == "card" %}
+        <div class="bg-white shadow rounded-lg p-6 space-y-4">
+          <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div class="h-4 bg-gray-200 rounded w-full"></div>
+          <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+          <div class="h-10 bg-gray-200 rounded w-1/3 mt-6"></div>
+        </div>
+      {% elif skeleton_type == "list" %}
+        <div class="space-y-3">
+          {% for i in "123456" %}
+          <div class="flex items-center space-x-4">
+            <div class="rounded-full bg-gray-200 h-10 w-10"></div>
+            <div class="flex-1 space-y-2">
+              <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% elif skeleton_type == "table" %}
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="h-12 bg-gray-100 border-b border-gray-200"></div>
+          {% for i in "12345" %}
+          <div class="h-16 bg-white border-b border-gray-200 flex items-center px-6 space-x-4">
+            <div class="h-4 bg-gray-200 rounded flex-1"></div>
+            <div class="h-4 bg-gray-200 rounded flex-1"></div>
+            <div class="h-4 bg-gray-200 rounded flex-1"></div>
+            <div class="h-4 bg-gray-200 rounded w-20"></div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        {# Default skeleton #}
+        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+        <div class="h-4 bg-gray-200 rounded"></div>
+        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+      {% endif %}
+    </div>
+
+  {% elif type == "bar" %}
+    {# Progress bar loading #}
+    <div class="w-full">
+      {% if text %}
+        <p class="text-sm text-gray-600 font-medium mb-2">{{ text }}</p>
+      {% endif %}
+      <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-200">
+        <div class="animate-pulse bg-gradient-to-r from-blue-500 to-blue-600 w-full"></div>
+      </div>
+    </div>
+
+  {% endif %}
+</div>
+
+{% endwith %}
+{% endwith %}
+{% endwith %}

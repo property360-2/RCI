@@ -1,0 +1,115 @@
+{# Button Atom Component
+   Usage:
+   {% include "atoms/button.html" with
+      text="Click me"
+      variant="primary"
+      size="md"
+      type="button"
+      icon="check"
+      icon_position="left"
+      disabled=false
+      full_width=false
+      hx_get="/api/endpoint"
+      hx_target="#target"
+   %}
+
+   Variants: primary, secondary, success, danger, warning, info, ghost, link
+   Sizes: xs, sm, md, lg, xl
+#}
+
+{% load static %}
+
+{# Set defaults #}
+{% if variant == None %}{% with variant="primary" %}{% endwith %}{% endif %}
+{% if size == None %}{% with size="md" %}{% endwith %}{% endif %}
+{% if type == None %}{% with type="button" %}{% endwith %}{% endif %}
+
+{# Base classes #}
+{% with base_classes="inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed" %}
+
+{# Variant classes #}
+{% if variant == "primary" %}
+  {% with variant_classes="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg focus:ring-blue-500" %}
+{% elif variant == "secondary" %}
+  {% with variant_classes="bg-gray-100 hover:bg-gray-200 text-gray-900 border border-gray-300 focus:ring-gray-500" %}
+{% elif variant == "success" %}
+  {% with variant_classes="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg focus:ring-green-500" %}
+{% elif variant == "danger" %}
+  {% with variant_classes="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white shadow-md hover:shadow-lg focus:ring-red-500" %}
+{% elif variant == "warning" %}
+  {% with variant_classes="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white shadow-md hover:shadow-lg focus:ring-yellow-500" %}
+{% elif variant == "info" %}
+  {% with variant_classes="bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white shadow-md hover:shadow-lg focus:ring-cyan-500" %}
+{% elif variant == "ghost" %}
+  {% with variant_classes="hover:bg-gray-100 text-gray-700 focus:ring-gray-500" %}
+{% elif variant == "link" %}
+  {% with variant_classes="text-blue-600 hover:text-blue-800 hover:underline focus:ring-blue-500" %}
+{% else %}
+  {% with variant_classes="bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500" %}
+{% endif %}
+
+{# Size classes #}
+{% if size == "xs" %}
+  {% with size_classes="px-2.5 py-1.5 text-xs gap-1" %}
+{% elif size == "sm" %}
+  {% with size_classes="px-3 py-2 text-sm gap-1.5" %}
+{% elif size == "md" %}
+  {% with size_classes="px-4 py-2.5 text-sm gap-2" %}
+{% elif size == "lg" %}
+  {% with size_classes="px-5 py-3 text-base gap-2" %}
+{% elif size == "xl" %}
+  {% with size_classes="px-6 py-3.5 text-lg gap-2.5" %}
+{% else %}
+  {% with size_classes="px-4 py-2.5 text-sm gap-2" %}
+{% endif %}
+
+{# Width class #}
+{% if full_width %}
+  {% with width_class="w-full" %}
+{% else %}
+  {% with width_class="" %}
+{% endif %}
+
+{# Combine all classes #}
+{% with all_classes=base_classes|add:" "|add:variant_classes|add:" "|add:size_classes|add:" "|add:width_class|add:" "|add:class %}
+
+<button
+  type="{{ type }}"
+  class="{{ all_classes }}"
+  {% if disabled %}disabled{% endif %}
+  {% if hx_get %}hx-get="{{ hx_get }}"{% endif %}
+  {% if hx_post %}hx-post="{{ hx_post }}"{% endif %}
+  {% if hx_put %}hx-put="{{ hx_put }}"{% endif %}
+  {% if hx_delete %}hx-delete="{{ hx_delete }}"{% endif %}
+  {% if hx_target %}hx-target="{{ hx_target }}"{% endif %}
+  {% if hx_swap %}hx-swap="{{ hx_swap }}"{% endif %}
+  {% if hx_trigger %}hx-trigger="{{ hx_trigger }}"{% endif %}
+  {% if hx_indicator %}hx-indicator="{{ hx_indicator }}"{% endif %}
+  {% if onclick %}onclick="{{ onclick }}"{% endif %}
+  {% if id %}id="{{ id }}"{% endif %}
+  {{ attrs|safe }}
+>
+  {# Icon left #}
+  {% if icon and icon_position == "left" or icon and not icon_position %}
+    {% include "atoms/icon.html" with name=icon size=icon_size|default:"sm" %}
+  {% endif %}
+
+  {# Button text #}
+  {% if text %}
+    <span>{{ text }}</span>
+  {% endif %}
+
+  {# Slot for custom content #}
+  {{ slot|safe }}
+
+  {# Icon right #}
+  {% if icon and icon_position == "right" %}
+    {% include "atoms/icon.html" with name=icon size=icon_size|default:"sm" %}
+  {% endif %}
+</button>
+
+{% endwith %}
+{% endwith %}
+{% endwith %}
+{% endwith %}
+{% endwith %}
