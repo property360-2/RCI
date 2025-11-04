@@ -177,6 +177,13 @@ class Command(BaseCommand):
         """Create academic programs/courses."""
         self.stdout.write('Seeding courses...')
 
+        # Check if the database has a 'title' column (legacy schema)
+        with connection.cursor() as cursor:
+            cursor.execute("PRAGMA table_info(courses_course)")
+            columns = {row[1] for row in cursor.fetchall()}
+
+        has_title_column = 'title' in columns
+
         courses_data = [
             {
                 'code': 'BSCS',
@@ -209,6 +216,11 @@ class Command(BaseCommand):
                 'total_units': 180
             },
         ]
+
+        # If the database has a 'title' column, add it to the course data
+        if has_title_column:
+            for course_data in courses_data:
+                course_data['title'] = course_data['name']
 
         courses = []
         for course_data in courses_data:
