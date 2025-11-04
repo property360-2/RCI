@@ -1,7 +1,4 @@
-Got it bro 😎 — here’s the **Richwell College Portal v3.0 Schema (Markdown table format)** — readable, exportable, and perfect for docs or planning sheets.
-Everything is summarized per table with relationships, key fields, and archive status.
 
----
 
 # 🧩 **Richwell College Portal v3.0 – Database Schema (Markdown)**
 
@@ -86,7 +83,3 @@ Everything is summarized per table with relationships, key fields, and archive s
 | **Enrollment Layer**   | `students`, `enrollments`                                              | Manages academic participation   |
 | **Grades Layer**       | `grade_records`, `inc_records`                                         | Evaluation & INC policy tracking |
 | **System Control**     | `audit_trail`, `archive`                                               | Traceability & compliance        |
-
----
-
-Would you like me to follow this up with the **ERD diagram (Entity Relationship Diagram)** in image form next — matching this schema (with colored roles + relationships)?

@@ -57,18 +57,6 @@ INSTALLED_APPS = [
     "audit",
     "archive_app",
 
-    # Custom apps
-    "core",           # Core mixins and utilities
-    "users",          # User authentication and roles
-    "terms",          # Academic terms/semesters
-    "courses",        # Degree programs (BSCS, BSBA, etc.)
-    "subjects",       # Individual subjects/courses (COMP101, etc.)
-    "sections",       # Class sections with schedules
-    "students",       # Student records
-    "enrollments",    # Student enrollments in sections
-    "grades",         # Grade records and INC tracking
-    "archive_app",    # Archive management
-    "audit",          # Audit trail logging
 ]
 
 MIDDLEWARE = [
