@@ -1,0 +1,331 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Admin Dashboard - Richwell College{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">System Administration</h1>
+                <p class="text-gray-600 mt-2">Welcome back, {{ user.get_full_name|default:user.username }}</p>
+            </div>
+            <div class="flex space-x-3">
+                {% include "atoms/button.html" with
+                  text="System Settings"
+                  variant="primary"
+                  icon="cog"
+                  size="md"
+                %}
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {% include "molecules/stat_tile.html" with
+          title="Total Users"
+          value="3,154"
+          icon="users"
+          trend="+45"
+          trend_direction="up"
+          trend_label="new this month"
+          gradient_from="blue-500"
+          gradient_to="blue-600"
+          link="/admin/users/"
+        %}
+
+        {% include "molecules/stat_tile.html" with
+          title="Active Sessions"
+          value="248"
+          icon="monitor"
+          description="Current active users"
+          gradient_from="green-500"
+          gradient_to="green-600"
+          link="/admin/sessions/"
+        %}
+
+        {% include "molecules/stat_tile.html" with
+          title="System Health"
+          value="98%"
+          icon="shield-check"
+          description="All systems operational"
+          gradient_from="purple-500"
+          gradient_to="purple-600"
+          link="/admin/health/"
+        %}
+
+        {% include "molecules/stat_tile.html" with
+          title="Database Size"
+          value="2.4 GB"
+          icon="database"
+          description="42% capacity"
+          gradient_from="yellow-500"
+          gradient_to="yellow-600"
+          link="/admin/database/"
+        %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- User Management -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                User Management
+            </h2>
+            <div class="space-y-3">
+                <a href="#" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition group">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-200 transition">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Manage Users</span>
+                            <p class="text-xs text-gray-500">3,154 total users</p>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="#" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition group">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-green-100 p-2 rounded-lg group-hover:bg-green-200 transition">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Create User</span>
+                            <p class="text-xs text-gray-500">Add new user account</p>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="#" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition group">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-purple-100 p-2 rounded-lg group-hover:bg-purple-200 transition">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Role Management</span>
+                            <p class="text-xs text-gray-500">Manage user roles</p>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- System Management -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <svg class="w-6 h-6 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                System Management
+            </h2>
+            <div class="space-y-3">
+                <a href="#" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition group">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-200 transition">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">Database Management</span>
+                            <p class="text-xs text-gray-500">Backup & restore</p>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="#" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition group">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-green-100 p-2 rounded-lg group-hover:bg-green-200 transition">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">System Logs</span>
+                            <p class="text-xs text-gray-500">View system logs</p>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="#" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition group">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-purple-100 p-2 rounded-lg group-hover:bg-purple-200 transition">
+                            <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-700">System Configuration</span>
+                            <p class="text-xs text-gray-500">Configure settings</p>
+                        </div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- User Distribution -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">User Distribution by Role</h2>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        {% include "atoms/badge.html" with text="STUDENT" variant="primary" size="md" %}
+                        <span class="text-sm text-gray-600">2,847 users</span>
+                    </div>
+                    <div class="flex-1 mx-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-900">90%</span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        {% include "atoms/badge.html" with text="PROFESSOR" variant="success" size="md" %}
+                        <span class="text-sm text-gray-600">156 users</span>
+                    </div>
+                    <div class="flex-1 mx-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-500 h-2 rounded-full" style="width: 5%"></div>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-900">5%</span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        {% include "atoms/badge.html" with text="REGISTRAR" variant="warning" size="md" %}
+                        <span class="text-sm text-gray-600">12 users</span>
+                    </div>
+                    <div class="flex-1 mx-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-yellow-500 h-2 rounded-full" style="width: 2%"></div>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-900">2%</span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        {% include "atoms/badge.html" with text="ADMISSION" variant="info" size="md" %}
+                        <span class="text-sm text-gray-600">8 users</span>
+                    </div>
+                    <div class="flex-1 mx-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-cyan-500 h-2 rounded-full" style="width: 1%"></div>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-900">1%</span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        {% include "atoms/badge.html" with text="DEAN" variant="secondary" size="md" %}
+                        <span class="text-sm text-gray-600">4 users</span>
+                    </div>
+                    <div class="flex-1 mx-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-gray-500 h-2 rounded-full" style="width: 1%"></div>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-900">1%</span>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        {% include "atoms/badge.html" with text="ADMIN" variant="danger" size="md" %}
+                        <span class="text-sm text-gray-600">3 users</span>
+                    </div>
+                    <div class="flex-1 mx-4">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-red-500 h-2 rounded-full" style="width: 1%"></div>
+                        </div>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-900">1%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Sidebar -->
+        <div class="space-y-6">
+            <!-- System Status -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    System Status
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Web Server</span>
+                        {% include "atoms/badge.html" with text="Online" variant="success" size="sm" %}
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Database</span>
+                        {% include "atoms/badge.html" with text="Online" variant="success" size="sm" %}
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Cache</span>
+                        {% include "atoms/badge.html" with text="Online" variant="success" size="sm" %}
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600">Email Service</span>
+                        {% include "atoms/badge.html" with text="Online" variant="success" size="sm" %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Recent Admin Activity</h3>
+                <div class="space-y-3">
+                    <div class="text-sm">
+                        <p class="text-gray-900 font-medium">User created</p>
+                        <p class="text-gray-500 text-xs">Prof. Johnson • 10 min ago</p>
+                    </div>
+                    <div class="text-sm">
+                        <p class="text-gray-900 font-medium">Database backup</p>
+                        <p class="text-gray-500 text-xs">Automated • 2 hours ago</p>
+                    </div>
+                    <div class="text-sm">
+                        <p class="text-gray-900 font-medium">System update</p>
+                        <p class="text-gray-500 text-xs">v3.0.1 installed • 1 day ago</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
