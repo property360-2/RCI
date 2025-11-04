@@ -13,7 +13,7 @@ Version: 3.0
 """
 
 from django.core.management.base import BaseCommand
-from django.db import transaction
+from django.db import transaction, connection
 from django.utils import timezone
 from datetime import timedelta
 import random
@@ -46,6 +46,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('Starting data seeding...'))
 
         try:
+            self.ensure_schema()
             with transaction.atomic():
                 # Seed in order of dependencies
                 users = self.seed_users()
@@ -57,13 +58,60 @@ class Command(BaseCommand):
                 enrollments = self.seed_enrollments(students, sections, terms)
                 self.seed_grades(enrollments)
 
-                self.stdout.write(self.style.SUCCESS('✓ Data seeding completed successfully!'))
+                self.stdout.write(self.style.SUCCESS('Data seeding completed successfully!'))
                 self.print_summary()
                 self.print_credentials()
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f'✗ Error during seeding: {str(e)}'))
+            self.stdout.write(self.style.ERROR(f'Error during seeding: {str(e)}'))
             raise
+
+    def ensure_schema(self):
+        """Ensure legacy databases have the expected columns before seeding."""
+        self.ensure_course_schema()
+
+    def ensure_course_schema(self):
+        """Add missing columns for the Course model when older schemas are detected."""
+        with connection.cursor() as cursor:
+            cursor.execute("PRAGMA table_info(courses_course)")
+            columns = {row[1] for row in cursor.fetchall()}
+
+        if not columns:
+            return
+
+        alterations = []
+
+        with connection.cursor() as cursor:
+            if 'name' not in columns:
+                cursor.execute("ALTER TABLE courses_course ADD COLUMN name varchar(200)")
+                cursor.execute(
+                    "UPDATE courses_course "
+                    "SET name = title "
+                    "WHERE name IS NULL AND title IS NOT NULL"
+                )
+                alterations.append('name')
+
+            if 'total_units' not in columns:
+                cursor.execute("ALTER TABLE courses_course ADD COLUMN total_units integer DEFAULT 0")
+                cursor.execute(
+                    "UPDATE courses_course "
+                    "SET total_units = 0 "
+                    "WHERE total_units IS NULL"
+                )
+                alterations.append('total_units')
+
+            if 'years_to_complete' not in columns:
+                cursor.execute("ALTER TABLE courses_course ADD COLUMN years_to_complete integer DEFAULT 4")
+                cursor.execute(
+                    "UPDATE courses_course "
+                    "SET years_to_complete = COALESCE(years, 4) "
+                    "WHERE years_to_complete IS NULL"
+                )
+                alterations.append('years_to_complete')
+
+        if alterations:
+            joined = ', '.join(alterations)
+            self.stdout.write(self.style.WARNING(f'Adjusted courses schema (added: {joined})'))
 
     def clear_data(self):
         """Clear all existing data (except superusers)."""
@@ -75,7 +123,7 @@ class Command(BaseCommand):
         Course.objects.all().delete()
         Term.objects.all().delete()
         User.objects.filter(is_superuser=False).delete()
-        self.stdout.write(self.style.SUCCESS('✓ Existing data cleared'))
+        self.stdout.write(self.style.SUCCESS('Existing data cleared'))
 
     def seed_users(self):
         """Create users with different roles."""
@@ -122,7 +170,7 @@ class Command(BaseCommand):
                 user.save()
             users[user_data['role']] = users.get(user_data['role'], []) + [user]
 
-        self.stdout.write(self.style.SUCCESS(f'  ✓ Created {len(users_data)} users'))
+        self.stdout.write(self.style.SUCCESS(f'  Created {len(users_data)} users'))
         return users
 
     def seed_courses(self):
@@ -170,7 +218,7 @@ class Command(BaseCommand):
             )
             courses.append(course)
 
-        self.stdout.write(self.style.SUCCESS(f'  ✓ Created {len(courses)} courses'))
+        self.stdout.write(self.style.SUCCESS(f'  Created {len(courses)} courses'))
         return courses
 
     def seed_subjects(self, courses):
@@ -243,7 +291,7 @@ class Command(BaseCommand):
                     if prereq:
                         subject.prerequisites.add(prereq)
 
-        self.stdout.write(self.style.SUCCESS(f'  ✓ Created {len(subjects)} subjects'))
+        self.stdout.write(self.style.SUCCESS(f'  Created {len(subjects)} subjects'))
         return subjects
 
     def seed_terms(self):
@@ -292,7 +340,7 @@ class Command(BaseCommand):
             )
             terms.append(term)
 
-        self.stdout.write(self.style.SUCCESS(f'  ✓ Created {len(terms)} terms'))
+        self.stdout.write(self.style.SUCCESS(f'  Created {len(terms)} terms'))
         return terms
 
     def seed_students(self, users, courses):
@@ -351,7 +399,7 @@ class Command(BaseCommand):
             )
             students.append(student)
 
-        self.stdout.write(self.style.SUCCESS(f'  ✓ Created {len(students)} students'))
+        self.stdout.write(self.style.SUCCESS(f'  Created {len(students)} students'))
         return students
 
     def seed_sections(self, subjects, terms, users):
@@ -403,7 +451,7 @@ class Command(BaseCommand):
                 )
                 sections.append(section)
 
-        self.stdout.write(self.style.SUCCESS(f'  ✓ Created {len(sections)} sections'))
+        self.stdout.write(self.style.SUCCESS(f'  Created {len(sections)} sections'))
         return sections
 
     def seed_enrollments(self, students, sections, terms):
@@ -430,7 +478,7 @@ class Command(BaseCommand):
                 )
                 enrollments.append(enrollment)
 
-        self.stdout.write(self.style.SUCCESS(f'  ✓ Created {len(enrollments)} enrollments'))
+        self.stdout.write(self.style.SUCCESS(f'  Created {len(enrollments)} enrollments'))
         return enrollments
 
     def seed_grades(self, enrollments):
@@ -456,7 +504,7 @@ class Command(BaseCommand):
             )
             grades.append(grade)
 
-        self.stdout.write(self.style.SUCCESS(f'  ✓ Created {len(grades)} grade records'))
+        self.stdout.write(self.style.SUCCESS(f'  Created {len(grades)} grade records'))
         return grades
 
     def print_summary(self):
