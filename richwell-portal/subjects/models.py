@@ -23,10 +23,9 @@ Last Updated: 2024
 """
 
 from django.db import models
-from core.models import ArchiveMixin, TimeStampMixin
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.exceptions import ValidationError
-from core.models import TimeStampMixin, ArchiveMixin
+from core.models import ArchiveMixin, TimeStampMixin
 
 
 class Subject(ArchiveMixin, TimeStampMixin):
