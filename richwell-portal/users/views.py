@@ -239,28 +239,13 @@ def dashboard_view(request):
         return render(request, 'pages/admission/dashboard.html', context)
 
     elif user.role == User.Role.PROFESSOR:
-        # TODO: Create professor/dashboard.html template
-        return render(request, 'pages/placeholder.html', {
-            **context,
-            'page_title': 'Professor Dashboard',
-            'message': 'Professor dashboard is under development.'
-        })
+        return render(request, 'pages/professor/dashboard.html', context)
 
     elif user.role == User.Role.STUDENT:
-        # TODO: Create student/dashboard.html template
-        return render(request, 'pages/placeholder.html', {
-            **context,
-            'page_title': 'Student Dashboard',
-            'message': 'Student dashboard is under development.'
-        })
+        return render(request, 'pages/student/dashboard.html', context)
 
     elif user.role == User.Role.ADMIN:
-        # TODO: Create admin/dashboard.html template
-        return render(request, 'pages/placeholder.html', {
-            **context,
-            'page_title': 'Admin Dashboard',
-            'message': 'Admin dashboard is under development.'
-        })
+        return render(request, 'pages/admin/dashboard.html', context)
 
     else:
         # Fallback for undefined roles
