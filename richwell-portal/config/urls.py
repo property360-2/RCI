@@ -22,5 +22,10 @@ from core.views import health_check
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("healthz/", health_check, name="health_check"),
-    # API endpoints will be added in later phases
+
+    # REST API endpoints
+    path("api/v1/", include("config.api_urls")),
+
+    # Web application endpoints
+    path("", include("users.urls")),
 ]

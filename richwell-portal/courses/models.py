@@ -20,9 +20,8 @@ Last Updated: 2024
 """
 
 from django.db import models
-from core.models import ArchiveMixin, TimeStampMixin
 from django.core.validators import MinValueValidator
-from core.models import TimeStampMixin, ArchiveMixin
+from core.models import ArchiveMixin, TimeStampMixin
 
 
 class Course(ArchiveMixin, TimeStampMixin):
