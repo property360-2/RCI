@@ -84,7 +84,7 @@ def login_view(request):
                     <strong>Error:</strong> Please provide both username and password.
                 </div>
             '''
-            return HttpResponse(error_html, status=422)
+            return HttpResponse(error_html)
 
         # Authenticate user
         user = authenticate(request, username=username, password=password)
@@ -98,7 +98,7 @@ def login_view(request):
                         Please contact IT Support for assistance.
                     </div>
                 '''
-                return HttpResponse(error_html, status=422)
+                return HttpResponse(error_html)
 
             # Login user and create session
             login(request, user)
@@ -126,7 +126,7 @@ def login_view(request):
                     <strong>Error:</strong> Invalid username or password. Please try again.
                 </div>
             '''
-            return HttpResponse(error_html, status=422)
+            return HttpResponse(error_html)
 
     # GET request - render login page
     return render(request, 'pages/login.html')
