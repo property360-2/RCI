@@ -1,0 +1,105 @@
+{# Card Molecule Component
+   Usage:
+   {% include "molecules/card.html" with
+      title="Card Title"
+      subtitle="Card subtitle"
+      icon="document"
+      badge_text="New"
+      badge_variant="success"
+      hoverable=true
+      clickable=true
+      link="/detail/"
+   %}
+#}
+
+{# Set defaults #}
+{% if hoverable == None %}{% with hoverable=true %}{% endwith %}{% endif %}
+
+{% with card_classes="bg-white rounded-lg border border-gray-200 overflow-hidden" %}
+{% if hoverable %}
+  {% with card_classes=card_classes|add:" hover:shadow-lg transition-shadow duration-300" %}
+{% endif %}
+{% if clickable and link %}
+  {% with card_classes=card_classes|add:" cursor-pointer" %}
+{% endif %}
+
+{% if clickable and link %}
+  <a href="{{ link }}" class="{{ card_classes }} {{ class }}" {{ attrs|safe }}>
+{% else %}
+  <div class="{{ card_classes }} {{ class }}" {{ attrs|safe }}>
+{% endif %}
+
+  {# Card header #}
+  {% if title or icon or badge_text or header_actions %}
+  <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+    <div class="flex items-start justify-between">
+      <div class="flex items-start gap-3 flex-1">
+        {# Icon #}
+        {% if icon %}
+        <div class="flex-shrink-0 mt-0.5">
+          <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+            <span class="text-blue-600">
+              {% include "atoms/icon.html" with name=icon size="md" %}
+            </span>
+          </div>
+        </div>
+        {% endif %}
+
+        {# Title and subtitle #}
+        <div class="flex-1 min-w-0">
+          {% if title %}
+          <h3 class="text-lg font-semibold text-gray-900 truncate">{{ title }}</h3>
+          {% endif %}
+
+          {% if subtitle %}
+          <p class="mt-0.5 text-sm text-gray-500">{{ subtitle }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Badge or actions #}
+      <div class="flex-shrink-0 ml-4">
+        {% if badge_text %}
+          {% include "atoms/badge.html" with text=badge_text variant=badge_variant|default:"primary" %}
+        {% endif %}
+
+        {% if header_actions %}
+          {{ header_actions|safe }}
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Card body #}
+  <div class="px-6 py-4">
+    {% if body %}
+      {{ body|safe }}
+    {% else %}
+      {{ slot|safe }}
+    {% endif %}
+  </div>
+
+  {# Card footer #}
+  {% if footer or footer_actions %}
+  <div class="px-6 py-3 bg-gray-50 border-t border-gray-200">
+    {% if footer %}
+      {{ footer|safe }}
+    {% endif %}
+
+    {% if footer_actions %}
+      <div class="flex items-center justify-between gap-3">
+        {{ footer_actions|safe }}
+      </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+{% if clickable and link %}
+  </a>
+{% else %}
+  </div>
+{% endif %}
+
+{% endwith %}
+{% endwith %}

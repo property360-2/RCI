@@ -1,0 +1,444 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Professor Dashboard - Richwell College Portal{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {# Page header #}
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Professor Dashboard</h1>
+      <p class="mt-2 text-sm text-gray-600">
+        Welcome back, {{ user.get_full_name|default:user.username }}! Manage your classes and encode grades.
+      </p>
+    </div>
+
+    {# Stats overview #}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {% include "molecules/stat_tile.html" with
+        title="My Sections"
+        value="4"
+        icon="book"
+        description="Active sections this term"
+        gradient_from="blue-500"
+        gradient_to="blue-600"
+        link="/professor/sections/"
+      %}
+
+      {% include "molecules/stat_tile.html" with
+        title="Total Students"
+        value="142"
+        icon="users"
+        description="Students across all sections"
+        gradient_from="green-500"
+        gradient_to="green-600"
+        link="/professor/students/"
+      %}
+
+      {% include "molecules/stat_tile.html" with
+        title="Pending Grades"
+        value="18"
+        icon="clipboard"
+        description="Grades to be encoded"
+        gradient_from="yellow-500"
+        gradient_to="yellow-600"
+        link="#pending-grades"
+      %}
+
+      {% include "molecules/stat_tile.html" with
+        title="INC Records"
+        value="3"
+        icon="clock"
+        description="Incomplete submissions"
+        gradient_from="red-500"
+        gradient_to="red-600"
+        link="/professor/inc-records/"
+      %}
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {# Main content - My Sections #}
+      <div class="lg:col-span-2 space-y-6">
+        {# My Sections Card #}
+        <div class="bg-white rounded-lg shadow-md border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                {% include "atoms/icon.html" with name="book" size="md" class="text-blue-600" %}
+                <span>My Sections</span>
+              </h2>
+              {% include "atoms/button.html" with
+                text="View All"
+                variant="ghost"
+                size="sm"
+                icon="arrow-right"
+                icon_position="right"
+              %}
+            </div>
+          </div>
+
+          <div class="p-6">
+            {# Sections list #}
+            <div class="space-y-4">
+              {# Section 1 #}
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-start gap-3">
+                      <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span class="text-blue-600 font-bold text-lg">CS</span>
+                      </div>
+                      <div class="flex-1">
+                        <h3 class="text-base font-semibold text-gray-900">CS 101 - Introduction to Programming</h3>
+                        <p class="text-sm text-gray-500 mt-1">Section A • MWF 9:00 AM - 10:30 AM • Room 301</p>
+                        <div class="flex items-center gap-4 mt-2">
+                          <span class="text-xs text-gray-600 flex items-center gap-1">
+                            {% include "atoms/icon.html" with name="users" size="xs" %}
+                            <span>38 students</span>
+                          </span>
+                          <span class="text-xs text-gray-600 flex items-center gap-1">
+                            {% include "atoms/icon.html" with name="clipboard" size="xs" %}
+                            <span>3 pending grades</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ml-4 flex flex-col gap-2">
+                    {% include "atoms/button.html" with
+                      text="Encode Grades"
+                      variant="primary"
+                      size="sm"
+                      icon="pencil"
+                    %}
+                    {% include "atoms/button.html" with
+                      text="View Roster"
+                      variant="secondary"
+                      size="sm"
+                      icon="users"
+                    %}
+                  </div>
+                </div>
+              </div>
+
+              {# Section 2 #}
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-start gap-3">
+                      <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span class="text-green-600 font-bold text-lg">DB</span>
+                      </div>
+                      <div class="flex-1">
+                        <h3 class="text-base font-semibold text-gray-900">CS 201 - Database Systems</h3>
+                        <p class="text-sm text-gray-500 mt-1">Section B • TTH 1:00 PM - 2:30 PM • Room 205</p>
+                        <div class="flex items-center gap-4 mt-2">
+                          <span class="text-xs text-gray-600 flex items-center gap-1">
+                            {% include "atoms/icon.html" with name="users" size="xs" %}
+                            <span>35 students</span>
+                          </span>
+                          {% include "atoms/badge.html" with text="All graded" variant="success" size="sm" icon="check" %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ml-4 flex flex-col gap-2">
+                    {% include "atoms/button.html" with
+                      text="Encode Grades"
+                      variant="primary"
+                      size="sm"
+                      icon="pencil"
+                    %}
+                    {% include "atoms/button.html" with
+                      text="View Roster"
+                      variant="secondary"
+                      size="sm"
+                      icon="users"
+                    %}
+                  </div>
+                </div>
+              </div>
+
+              {# Section 3 #}
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-start gap-3">
+                      <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span class="text-purple-600 font-bold text-lg">WD</span>
+                      </div>
+                      <div class="flex-1">
+                        <h3 class="text-base font-semibold text-gray-900">CS 301 - Web Development</h3>
+                        <p class="text-sm text-gray-500 mt-1">Section A • MWF 2:00 PM - 3:30 PM • Lab 101</p>
+                        <div class="flex items-center gap-4 mt-2">
+                          <span class="text-xs text-gray-600 flex items-center gap-1">
+                            {% include "atoms/icon.html" with name="users" size="xs" %}
+                            <span>32 students</span>
+                          </span>
+                          <span class="text-xs text-gray-600 flex items-center gap-1">
+                            {% include "atoms/icon.html" with name="clipboard" size="xs" %}
+                            <span>12 pending grades</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ml-4 flex flex-col gap-2">
+                    {% include "atoms/button.html" with
+                      text="Encode Grades"
+                      variant="primary"
+                      size="sm"
+                      icon="pencil"
+                    %}
+                    {% include "atoms/button.html" with
+                      text="View Roster"
+                      variant="secondary"
+                      size="sm"
+                      icon="users"
+                    %}
+                  </div>
+                </div>
+              </div>
+
+              {# Section 4 #}
+              <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div class="flex items-start justify-between">
+                  <div class="flex-1">
+                    <div class="flex items-start gap-3">
+                      <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <span class="text-red-600 font-bold text-lg">AL</span>
+                      </div>
+                      <div class="flex-1">
+                        <h3 class="text-base font-semibold text-gray-900">CS 401 - Algorithms & Complexity</h3>
+                        <p class="text-sm text-gray-500 mt-1">Section C • TTH 10:00 AM - 11:30 AM • Room 402</p>
+                        <div class="flex items-center gap-4 mt-2">
+                          <span class="text-xs text-gray-600 flex items-center gap-1">
+                            {% include "atoms/icon.html" with name="users" size="xs" %}
+                            <span>37 students</span>
+                          </span>
+                          <span class="text-xs text-gray-600 flex items-center gap-1">
+                            {% include "atoms/icon.html" with name="clipboard" size="xs" %}
+                            <span>3 pending grades</span>
+                          </span>
+                          {% include "atoms/badge.html" with text="1 INC" variant="warning" size="sm" %}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="ml-4 flex flex-col gap-2">
+                    {% include "atoms/button.html" with
+                      text="Encode Grades"
+                      variant="primary"
+                      size="sm"
+                      icon="pencil"
+                    %}
+                    {% include "atoms/button.html" with
+                      text="View Roster"
+                      variant="secondary"
+                      size="sm"
+                      icon="users"
+                    %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {# Quick Grade Encoder #}
+        <div class="bg-white rounded-lg shadow-md border border-gray-200" id="pending-grades">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              {% include "atoms/icon.html" with name="pencil" size="md" class="text-green-600" %}
+              <span>Quick Grade Encoder</span>
+            </h2>
+          </div>
+
+          <div class="p-6">
+            <form class="space-y-4" hx-post="/api/grades/encode/" hx-target="#grade-result">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label for="section-select" class="block text-sm font-medium text-gray-700 mb-1.5">Section</label>
+                  <select id="section-select" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <option value="">Select a section</option>
+                    <option>CS 101 - Section A</option>
+                    <option>CS 201 - Section B</option>
+                    <option>CS 301 - Section A</option>
+                    <option>CS 401 - Section C</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="student-select" class="block text-sm font-medium text-gray-700 mb-1.5">Student</label>
+                  <select id="student-select" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <option value="">Select section first</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="grade-select" class="block text-sm font-medium text-gray-700 mb-1.5">Grade</label>
+                  <select id="grade-select" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <option value="">Select grade</option>
+                    <option value="1.00">1.00 (Excellent)</option>
+                    <option value="1.25">1.25</option>
+                    <option value="1.50">1.50</option>
+                    <option value="1.75">1.75</option>
+                    <option value="2.00">2.00 (Good)</option>
+                    <option value="2.25">2.25</option>
+                    <option value="2.50">2.50</option>
+                    <option value="2.75">2.75</option>
+                    <option value="3.00">3.00 (Pass)</option>
+                    <option value="5.00">5.00 (Fail)</option>
+                    <option value="INC">INC (Incomplete)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label for="remarks" class="block text-sm font-medium text-gray-700 mb-1.5">Remarks (Optional)</label>
+                  <input type="text" id="remarks" class="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="Add any remarks">
+                </div>
+              </div>
+
+              <div class="flex items-center justify-end gap-3 pt-4">
+                {% include "atoms/button.html" with
+                  text="Save Grade"
+                  variant="success"
+                  icon="check"
+                  type="submit"
+                %}
+                {% include "atoms/button.html" with
+                  text="Clear"
+                  variant="secondary"
+                  type="reset"
+                %}
+              </div>
+
+              <div id="grade-result" class="mt-4"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {# Sidebar #}
+      <div class="space-y-6">
+        {# Schedule Card #}
+        <div class="bg-white rounded-lg shadow-md border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              {% include "atoms/icon.html" with name="calendar" size="md" class="text-purple-600" %}
+              <span>Today's Schedule</span>
+            </h3>
+          </div>
+
+          <div class="p-6 space-y-4">
+            {# Schedule item 1 #}
+            <div class="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+              <div class="flex flex-col items-center">
+                <span class="text-xs text-gray-500">9:00</span>
+                <span class="text-xs text-gray-500">AM</span>
+              </div>
+              <div class="w-1 bg-blue-500 rounded-full"></div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">CS 101 - Section A</p>
+                <p class="text-xs text-gray-500">Room 301 • 9:00 - 10:30 AM</p>
+              </div>
+            </div>
+
+            {# Schedule item 2 #}
+            <div class="flex items-start gap-3 pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+              <div class="flex flex-col items-center">
+                <span class="text-xs text-gray-500">2:00</span>
+                <span class="text-xs text-gray-500">PM</span>
+              </div>
+              <div class="w-1 bg-purple-500 rounded-full"></div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-gray-900">CS 301 - Section A</p>
+                <p class="text-xs text-gray-500">Lab 101 • 2:00 - 3:30 PM</p>
+              </div>
+            </div>
+
+            {# No more classes #}
+            <div class="text-center py-2">
+              <p class="text-xs text-gray-400">No more classes today</p>
+            </div>
+          </div>
+        </div>
+
+        {# Quick Actions #}
+        <div class="bg-white rounded-lg shadow-md border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-semibold text-gray-900">Quick Actions</h3>
+          </div>
+
+          <div class="p-6 space-y-3">
+            {% include "atoms/button.html" with
+              text="View All Students"
+              variant="ghost"
+              icon="users"
+              full_width=true
+              class="justify-start"
+            %}
+            {% include "atoms/button.html" with
+              text="Manage INC Records"
+              variant="ghost"
+              icon="clock"
+              full_width=true
+              class="justify-start"
+            %}
+            {% include "atoms/button.html" with
+              text="Download Reports"
+              variant="ghost"
+              icon="download"
+              full_width=true
+              class="justify-start"
+            %}
+            {% include "atoms/button.html" with
+              text="My Profile"
+              variant="ghost"
+              icon="user"
+              full_width=true
+              class="justify-start"
+            %}
+          </div>
+        </div>
+
+        {# Recent Activity #}
+        <div class="bg-white rounded-lg shadow-md border border-gray-200">
+          <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              {% include "atoms/icon.html" with name="clock" size="md" class="text-gray-600" %}
+              <span>Recent Activity</span>
+            </h3>
+          </div>
+
+          <div class="p-6 space-y-4">
+            <div class="flex items-start gap-3">
+              <div class="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-900">Encoded grades for CS 201</p>
+                <p class="text-xs text-gray-500">2 hours ago</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-900">Updated INC record</p>
+                <p class="text-xs text-gray-500">5 hours ago</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <div class="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-900">Added remarks to student</p>
+                <p class="text-xs text-gray-500">Yesterday</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

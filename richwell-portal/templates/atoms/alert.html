@@ -1,0 +1,93 @@
+{# Alert Atom Component
+   Usage:
+   {% include "atoms/alert.html" with
+      type="success"
+      title="Success!"
+      message="Your changes have been saved."
+      dismissible=true
+      icon=true
+   %}
+
+   Types: success, error, warning, info
+#}
+
+{# Set defaults #}
+{% if type == None %}{% with type="info" %}{% endwith %}{% endif %}
+{% if dismissible == None %}{% with dismissible=false %}{% endwith %}{% endif %}
+{% if icon == None %}{% with icon=true %}{% endwith %}{% endif %}
+
+{# Type-specific classes and icons #}
+{% if type == "success" %}
+  {% with bg_class="bg-green-50" border_class="border-green-200" text_class="text-green-800" icon_class="text-green-400" icon_name="check-circle" %}
+{% elif type == "error" or type == "danger" %}
+  {% with bg_class="bg-red-50" border_class="border-red-200" text_class="text-red-800" icon_class="text-red-400" icon_name="x-circle" %}
+{% elif type == "warning" %}
+  {% with bg_class="bg-yellow-50" border_class="border-yellow-200" text_class="text-yellow-800" icon_class="text-yellow-400" icon_name="warning" %}
+{% elif type == "info" %}
+  {% with bg_class="bg-blue-50" border_class="border-blue-200" text_class="text-blue-800" icon_class="text-blue-400" icon_name="info" %}
+{% else %}
+  {% with bg_class="bg-gray-50" border_class="border-gray-200" text_class="text-gray-800" icon_class="text-gray-400" icon_name="info" %}
+{% endif %}
+
+<div
+  class="{{ bg_class }} {{ border_class }} border rounded-lg p-4 {{ class }}"
+  role="alert"
+  {% if dismissible %}x-data="{ show: true }" x-show="show" x-transition{% endif %}
+  {{ attrs|safe }}
+>
+  <div class="flex">
+    {# Icon #}
+    {% if icon %}
+    <div class="flex-shrink-0">
+      <span class="{{ icon_class }}">
+        {% include "atoms/icon.html" with name=icon_name size="md" %}
+      </span>
+    </div>
+    {% endif %}
+
+    {# Content #}
+    <div class="{% if icon %}ml-3{% endif %} flex-1">
+      {% if title %}
+      <h3 class="text-sm font-semibold {{ text_class }}">
+        {{ title }}
+      </h3>
+      {% endif %}
+
+      {% if message %}
+      <div class="{% if title %}mt-1{% endif %} text-sm {{ text_class }}">
+        {{ message }}
+      </div>
+      {% endif %}
+
+      {# Slot for custom content #}
+      {% if not message %}
+      <div class="{% if title %}mt-1{% endif %} text-sm {{ text_class }}">
+        {{ slot|safe }}
+      </div>
+      {% endif %}
+
+      {# Actions #}
+      {% if actions %}
+      <div class="mt-3 flex gap-3">
+        {{ actions|safe }}
+      </div>
+      {% endif %}
+    </div>
+
+    {# Dismiss button #}
+    {% if dismissible %}
+    <div class="ml-auto pl-3">
+      <button
+        type="button"
+        @click="show = false"
+        class="{{ text_class }} hover:{{ bg_class }} rounded-lg p-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-{{ bg_class }} focus:ring-blue-500"
+      >
+        <span class="sr-only">Dismiss</span>
+        {% include "atoms/icon.html" with name="x" size="sm" %}
+      </button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endwith %}

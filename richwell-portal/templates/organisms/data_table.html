@@ -1,0 +1,237 @@
+{# Data Table Organism Component
+   Usage:
+   {% include "organisms/data_table.html" with
+      id="students-table"
+      columns=columns_list
+      rows=data_rows
+      searchable=true
+      pagination=true
+      hx_get="/api/students/"
+      empty_title="No students found"
+      empty_description="Try adjusting your search filters"
+   %}
+
+   columns format: [{"name": "Name", "field": "name", "sortable": true}, ...]
+   rows format: [{"id": 1, "name": "John Doe", ...}, ...]
+#}
+
+{# Set defaults #}
+{% if searchable == None %}{% with searchable=true %}{% endwith %}{% endif %}
+{% if pagination == None %}{% with pagination=true %}{% endwith %}{% endif %}
+
+<div class="w-full {{ class }}" id="{{ id }}-container">
+  {# Table header with search and actions #}
+  <div class="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    {# Search bar #}
+    {% if searchable %}
+    <div class="flex-1 max-w-md">
+      {% include "molecules/search_bar.html" with
+        id=id|add:"-search"
+        placeholder=search_placeholder|default:"Search..."
+        hx_get=hx_get
+        hx_target="#"|add:id|add:"-tbody"
+        hx_indicator="#"|add:id|add:"-loading"
+        show_filter=show_filter
+        show_sort=false
+      %}
+    </div>
+    {% endif %}
+
+    {# Actions slot #}
+    {% if actions %}
+    <div class="flex items-center gap-2">
+      {{ actions|safe }}
+    </div>
+    {% endif %}
+  </div>
+
+  {# Table container with loading state #}
+  <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+    {# Loading overlay #}
+    <div id="{{ id }}-loading" class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+      {% include "atoms/loading.html" with type="spinner" size="lg" text="Loading..." center=true %}
+    </div>
+
+    {# Table #}
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        {# Table head #}
+        <thead class="bg-gray-50">
+          <tr>
+            {% if selectable %}
+            <th scope="col" class="w-12 px-6 py-3">
+              <input
+                type="checkbox"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                id="{{ id }}-select-all"
+                onchange="toggleAllCheckboxes('{{ id }}')"
+              >
+            </th>
+            {% endif %}
+
+            {% for column in columns %}
+            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              {% if column.sortable %}
+                <button
+                  class="flex items-center gap-1 hover:text-gray-900 transition-colors group"
+                  hx-get="{{ hx_get }}"
+                  hx-target="#{{ id }}-tbody"
+                  hx-vals='{"sort": "{{ column.field }}", "order": "asc"}'
+                  hx-indicator="#{{ id }}-loading"
+                >
+                  <span>{{ column.name }}</span>
+                  <span class="text-gray-400 group-hover:text-gray-600">
+                    {% include "atoms/icon.html" with name="chevron-up" size="xs" %}
+                  </span>
+                </button>
+              {% else %}
+                {{ column.name }}
+              {% endif %}
+            </th>
+            {% endfor %}
+
+            {% if row_actions %}
+            <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              Actions
+            </th>
+            {% endif %}
+          </tr>
+        </thead>
+
+        {# Table body #}
+        <tbody id="{{ id }}-tbody" class="bg-white divide-y divide-gray-200">
+          {% if rows %}
+            {% for row in rows %}
+            <tr class="hover:bg-gray-50 transition-colors">
+              {% if selectable %}
+              <td class="px-6 py-4">
+                <input
+                  type="checkbox"
+                  class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 {{ id }}-row-checkbox"
+                  value="{{ row.id }}"
+                >
+              </td>
+              {% endif %}
+
+              {% for column in columns %}
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                {% if column.render %}
+                  {{ column.render|safe }}
+                {% else %}
+                  {{ row|get_item:column.field }}
+                {% endif %}
+              </td>
+              {% endfor %}
+
+              {% if row_actions %}
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div class="flex items-center justify-end gap-2">
+                  {{ row_actions|safe }}
+                </div>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="{{ columns|length|add:1 }}" class="px-6 py-12">
+                {% include "molecules/empty_state.html" with
+                  icon="document"
+                  title=empty_title|default:"No data found"
+                  description=empty_description|default:"Try adjusting your filters or search terms"
+                %}
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    {# Pagination #}
+    {% if pagination and rows %}
+    <div class="bg-gray-50 px-6 py-3 border-t border-gray-200">
+      <div class="flex items-center justify-between">
+        {# Showing X-Y of Z results #}
+        <div class="text-sm text-gray-700">
+          Showing <span class="font-semibold">{{ page_start|default:1 }}</span> to
+          <span class="font-semibold">{{ page_end|default:rows|length }}</span> of
+          <span class="font-semibold">{{ total_count|default:rows|length }}</span> results
+        </div>
+
+        {# Pagination controls #}
+        <div class="flex items-center gap-2">
+          {# Previous button #}
+          {% if has_previous %}
+            <button
+              hx-get="{{ hx_get }}"
+              hx-vals='{"page": {{ previous_page }}}'
+              hx-target="#{{ id }}-tbody"
+              hx-indicator="#{{ id }}-loading"
+              class="inline-flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            >
+              {% include "atoms/icon.html" with name="chevron-left" size="sm" %}
+              <span>Previous</span>
+            </button>
+          {% else %}
+            <button disabled class="inline-flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed">
+              {% include "atoms/icon.html" with name="chevron-left" size="sm" %}
+              <span>Previous</span>
+            </button>
+          {% endif %}
+
+          {# Page numbers #}
+          <div class="flex items-center gap-1">
+            {% for page_num in page_range %}
+              {% if page_num == current_page %}
+                <span class="inline-flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg text-sm font-semibold">
+                  {{ page_num }}
+                </span>
+              {% else %}
+                <button
+                  hx-get="{{ hx_get }}"
+                  hx-vals='{"page": {{ page_num }}}'
+                  hx-target="#{{ id }}-tbody"
+                  hx-indicator="#{{ id }}-loading"
+                  class="inline-flex items-center justify-center w-10 h-10 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {{ page_num }}
+                </button>
+              {% endif %}
+            {% endfor %}
+          </div>
+
+          {# Next button #}
+          {% if has_next %}
+            <button
+              hx-get="{{ hx_get }}"
+              hx-vals='{"page": {{ next_page }}}'
+              hx-target="#{{ id }}-tbody"
+              hx-indicator="#{{ id }}-loading"
+              class="inline-flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+            >
+              <span>Next</span>
+              {% include "atoms/icon.html" with name="chevron-right" size="sm" %}
+            </button>
+          {% else %}
+            <button disabled class="inline-flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-400 bg-gray-100 cursor-not-allowed">
+              <span>Next</span>
+              {% include "atoms/icon.html" with name="chevron-right" size="sm" %}
+            </button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{# Checkbox selection script #}
+<script>
+  function toggleAllCheckboxes(tableId) {
+    const selectAll = document.getElementById(tableId + '-select-all');
+    const checkboxes = document.querySelectorAll('.' + tableId + '-row-checkbox');
+    checkboxes.forEach(checkbox => {
+      checkbox.checked = selectAll.checked;
+    });
+  }
+</script>
