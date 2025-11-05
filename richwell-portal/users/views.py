@@ -668,10 +668,6 @@ def placeholder_view(request):
 
     **Usage:**
         Used in urls.py for routes like:
-        - /courses/
-        - /subjects/
-        - /sections/
-        - /students/
         - /analytics/
 
     **Context Variables:**
@@ -687,3 +683,99 @@ def placeholder_view(request):
     }
 
     return render(request, 'pages/placeholder.html', context)
+
+
+@login_required
+def courses_management_view(request):
+    """
+    Courses Management page for administrators.
+
+    Provides full CRUD operations for managing degree programs and courses.
+
+    **Access Control:**
+    - DEAN, REGISTRAR, ADMIN: Full access
+    - Others: Redirect to dashboard
+
+    **Returns:**
+        HttpResponse: Rendered courses management template
+    """
+    # Check permissions
+    if request.user.role not in ['DEAN', 'REGISTRAR', 'ADMIN']:
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('dashboard')
+
+    return render(request, 'pages/admin/courses.html', {
+        'user': request.user,
+    })
+
+
+@login_required
+def subjects_management_view(request):
+    """
+    Subjects Management page for administrators.
+
+    Provides full CRUD operations for managing subjects and curriculum.
+
+    **Access Control:**
+    - DEAN, REGISTRAR, ADMIN: Full access
+    - Others: Redirect to dashboard
+
+    **Returns:**
+        HttpResponse: Rendered subjects management template
+    """
+    # Check permissions
+    if request.user.role not in ['DEAN', 'REGISTRAR', 'ADMIN']:
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('dashboard')
+
+    return render(request, 'pages/admin/subjects.html', {
+        'user': request.user,
+    })
+
+
+@login_required
+def sections_management_view(request):
+    """
+    Sections Management page for administrators.
+
+    Provides full CRUD operations for managing class sections and enrollments.
+
+    **Access Control:**
+    - DEAN, REGISTRAR, ADMISSION, ADMIN: Full access
+    - Others: Redirect to dashboard
+
+    **Returns:**
+        HttpResponse: Rendered sections management template
+    """
+    # Check permissions
+    if request.user.role not in ['DEAN', 'REGISTRAR', 'ADMISSION', 'ADMIN']:
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('dashboard')
+
+    return render(request, 'pages/admin/sections.html', {
+        'user': request.user,
+    })
+
+
+@login_required
+def students_management_view(request):
+    """
+    Students Management page for administrators.
+
+    Provides full CRUD operations for managing student records and profiles.
+
+    **Access Control:**
+    - DEAN, REGISTRAR, ADMISSION, ADMIN: Full access
+    - Others: Redirect to dashboard
+
+    **Returns:**
+        HttpResponse: Rendered students management template
+    """
+    # Check permissions
+    if request.user.role not in ['DEAN', 'REGISTRAR', 'ADMISSION', 'ADMIN']:
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('dashboard')
+
+    return render(request, 'pages/admin/students.html', {
+        'user': request.user,
+    })

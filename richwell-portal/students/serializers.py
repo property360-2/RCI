@@ -34,7 +34,6 @@ class StudentSerializer(serializers.ModelSerializer):
             'course_code',
             'year_level',
             'status',
-            'enrollment_date',
             'documents',
             'archived',
             'created_at',
@@ -73,6 +72,7 @@ class StudentDetailSerializer(serializers.ModelSerializer):
     course_details = serializers.SerializerMethodField()
     enrollments_count = serializers.SerializerMethodField()
     total_units = serializers.SerializerMethodField()
+    gpa = serializers.SerializerMethodField()
 
     class Meta:
         model = Student
@@ -83,9 +83,9 @@ class StudentDetailSerializer(serializers.ModelSerializer):
             'course_details',
             'year_level',
             'status',
-            'enrollment_date',
             'enrollments_count',
             'total_units',
+            'gpa',
             'documents',
             'archived',
             'created_at',
@@ -118,8 +118,11 @@ class StudentDetailSerializer(serializers.ModelSerializer):
 
     def get_total_units(self, obj):
         """Get total units enrolled by student."""
-        # TODO: Calculate from current term enrollments
-        return 0
+        return obj.get_total_units()
+
+    def get_gpa(self, obj):
+        """Get student's GPA."""
+        return obj.get_gpa()
 
 
 class StudentCreateSerializer(serializers.ModelSerializer):
@@ -146,7 +149,6 @@ class StudentCreateSerializer(serializers.ModelSerializer):
             'course',
             'year_level',
             'status',
-            'enrollment_date',
             'documents',
         ]
 

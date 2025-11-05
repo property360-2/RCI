@@ -9,13 +9,21 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('profile/', views.profile_view, name='profile'),
-    
-    # Placeholder URLs (will implement later)
-    path('courses/', views.placeholder_view, name='courses_list'),
-    path('subjects/', views.placeholder_view, name='subjects_list'),
-    path('sections/', views.placeholder_view, name='sections_list'),
+
+    # Admin Management URLs
+    path('admin/courses/', views.courses_management_view, name='courses_list'),
+    path('admin/subjects/', views.subjects_management_view, name='subjects_list'),
+    path('admin/sections/', views.sections_management_view, name='sections_list'),
+    path('admin/students/', views.students_management_view, name='students_list'),
+
+    # Legacy URLs (for backward compatibility)
+    path('courses/', views.courses_management_view, name='courses_management'),
+    path('subjects/', views.subjects_management_view, name='subjects_management'),
+    path('sections/', views.sections_management_view, name='sections_management'),
+    path('students/', views.students_management_view, name='students_management'),
+
+    # Other URLs
     path('enrollment/create/', views.placeholder_view, name='enrollment_create'),
-    path('students/', views.placeholder_view, name='students_list'),
     path('my-sections/', views.my_sections_view, name='my_sections'),
     path('grade-encoding/', views.grade_encoding_view, name='grade_encoding'),
     path('my-grades/', views.my_grades_view, name='my_grades'),

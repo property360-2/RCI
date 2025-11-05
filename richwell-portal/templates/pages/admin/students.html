@@ -1,0 +1,453 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Students Management - Richwell College{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Students Management</h1>
+          <p class="text-gray-600 mt-2">Manage student records and profiles</p>
+        </div>
+        <div class="flex space-x-3">
+          <button onclick="openCreateModal()" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Student
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+      <div class="flex items-center space-x-4">
+        <div class="flex-1">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search by student ID, name, or email..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onkeyup="searchStudents()"
+          >
+        </div>
+        <select id="courseFilter" onchange="loadStudents()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option value="">All Courses</option>
+        </select>
+        <button onclick="toggleArchived()" id="archivedToggle" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+          Show Archived
+        </button>
+        <button onclick="loadStudents()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div id="loadingState" class="p-8 text-center hidden">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p class="mt-2 text-gray-600">Loading students...</p>
+      </div>
+
+      <div id="studentsTable">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student ID</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year Level</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentsTableBody" class="bg-white divide-y divide-gray-200">
+            <!-- Students will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="p-12 text-center hidden">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No students found</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by creating a new student.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div id="studentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+  <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-lg bg-white">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Add Student</h3>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="studentForm" onsubmit="saveStudent(event)">
+      <input type="hidden" id="studentUserId" name="userId">
+
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+            <input type="text" id="studentUsername" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., jdoe">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+            <input type="email" id="studentEmail" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., jdoe@example.com">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+            <input type="text" id="studentFirstName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., John">
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+            <input type="text" id="studentLastName" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., Doe">
+          </div>
+        </div>
+
+        <div id="passwordField">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+          <input type="password" id="studentPassword" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Enter password">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Student ID *</label>
+          <input type="text" id="studentStudentId" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., 2024-00001">
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Course *</label>
+            <select id="studentCourse" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="">Select Course</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Year Level *</label>
+            <select id="studentYearLevel" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3">3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="5">5th Year</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+            <select id="studentStatus" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="ACTIVE">Active</option>
+              <option value="IRREGULAR">Irregular</option>
+              <option value="LOA">Leave of Absence</option>
+              <option value="GRADUATED">Graduated</option>
+              <option value="DROPPED">Dropped</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center justify-end space-x-3">
+        <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+          Cancel
+        </button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+          Save Student
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let showArchived = false;
+let allStudents = [];
+let allCourses = [];
+let isEditing = false;
+
+// Load students and courses on page load
+document.addEventListener('DOMContentLoaded', function() {
+  loadCourses();
+  loadStudents();
+});
+
+async function loadCourses() {
+  try {
+    const response = await fetch('/api/v1/courses/?archived=false');
+    allCourses = await response.json();
+
+    const courseFilter = document.getElementById('courseFilter');
+    const studentCourse = document.getElementById('studentCourse');
+
+    allCourses.forEach(course => {
+      courseFilter.innerHTML += `<option value="${course.id}">${course.code} - ${course.name}</option>`;
+      studentCourse.innerHTML += `<option value="${course.id}">${course.code} - ${course.name}</option>`;
+    });
+  } catch (error) {
+    console.error('Error loading courses:', error);
+  }
+}
+
+async function loadStudents() {
+  const loadingState = document.getElementById('loadingState');
+  const studentsTable = document.getElementById('studentsTable');
+  const emptyState = document.getElementById('emptyState');
+  const courseFilter = document.getElementById('courseFilter').value;
+
+  loadingState.classList.remove('hidden');
+  studentsTable.classList.add('hidden');
+  emptyState.classList.add('hidden');
+
+  try {
+    let url = `/api/v1/students/?archived=${showArchived}`;
+    if (courseFilter) {
+      url += `&course=${courseFilter}`;
+    }
+
+    const response = await fetch(url);
+    const students = await response.json();
+    allStudents = students;
+
+    displayStudents(students);
+  } catch (error) {
+    console.error('Error loading students:', error);
+    alert('Failed to load students. Please try again.');
+  } finally {
+    loadingState.classList.add('hidden');
+  }
+}
+
+function displayStudents(students) {
+  const tbody = document.getElementById('studentsTableBody');
+  const studentsTable = document.getElementById('studentsTable');
+  const emptyState = document.getElementById('emptyState');
+
+  if (students.length === 0) {
+    studentsTable.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    return;
+  }
+
+  studentsTable.classList.remove('hidden');
+  emptyState.classList.add('hidden');
+
+  tbody.innerHTML = students.map(student => {
+    const statusColors = {
+      'ACTIVE': 'bg-green-100 text-green-800',
+      'IRREGULAR': 'bg-yellow-100 text-yellow-800',
+      'LOA': 'bg-blue-100 text-blue-800',
+      'GRADUATED': 'bg-purple-100 text-purple-800',
+      'DROPPED': 'bg-gray-100 text-gray-800'
+    };
+    const statusColor = statusColors[student.status] || 'bg-gray-100 text-gray-800';
+
+    return `
+      <tr class="hover:bg-gray-50">
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-900">${student.student_id}</div>
+        </td>
+        <td class="px-6 py-4">
+          <div class="text-sm text-gray-900">${student.first_name} ${student.last_name}</div>
+          <div class="text-sm text-gray-500">${student.email}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-500">${student.course_code || '-'}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          <div class="text-sm text-gray-900">${student.year_level || '-'}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+          ${student.archived
+            ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Archived</span>'
+            : `<span class="px-2 py-1 text-xs font-semibold rounded-full ${statusColor}">${student.status}</span>`
+          }
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <div class="flex items-center justify-end space-x-2">
+            ${!student.archived ? `
+              <button onclick="editStudent(${student.user})" class="text-blue-600 hover:text-blue-900">Edit</button>
+              <button onclick="deleteStudent(${student.user}, '${student.student_id}')" class="text-red-600 hover:text-red-900">Archive</button>
+            ` : `
+              <button onclick="restoreStudent(${student.user}, '${student.student_id}')" class="text-green-600 hover:text-green-900">Restore</button>
+            `}
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function searchStudents() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allStudents.filter(student =>
+    student.student_id.toLowerCase().includes(searchTerm) ||
+    student.first_name.toLowerCase().includes(searchTerm) ||
+    student.last_name.toLowerCase().includes(searchTerm) ||
+    student.email.toLowerCase().includes(searchTerm)
+  );
+  displayStudents(filtered);
+}
+
+function toggleArchived() {
+  showArchived = !showArchived;
+  const button = document.getElementById('archivedToggle');
+  button.textContent = showArchived ? 'Hide Archived' : 'Show Archived';
+  loadStudents();
+}
+
+function openCreateModal() {
+  isEditing = false;
+  document.getElementById('modalTitle').textContent = 'Add Student';
+  document.getElementById('studentForm').reset();
+  document.getElementById('studentUserId').value = '';
+  document.getElementById('studentPassword').required = true;
+  document.getElementById('passwordField').classList.remove('hidden');
+  document.getElementById('studentModal').classList.remove('hidden');
+}
+
+async function editStudent(userId) {
+  isEditing = true;
+  try {
+    const response = await fetch(`/api/v1/students/${userId}/`);
+    const student = await response.json();
+
+    document.getElementById('modalTitle').textContent = 'Edit Student';
+    document.getElementById('studentUserId').value = student.user;
+    document.getElementById('studentUsername').value = student.username;
+    document.getElementById('studentEmail').value = student.email;
+    document.getElementById('studentFirstName').value = student.first_name;
+    document.getElementById('studentLastName').value = student.last_name;
+    document.getElementById('studentStudentId').value = student.student_id;
+    document.getElementById('studentCourse').value = student.course;
+    document.getElementById('studentYearLevel').value = student.year_level;
+    document.getElementById('studentStatus').value = student.status;
+
+    // Hide password field for edit
+    document.getElementById('studentPassword').required = false;
+    document.getElementById('passwordField').classList.add('hidden');
+
+    document.getElementById('studentModal').classList.remove('hidden');
+  } catch (error) {
+    console.error('Error loading student:', error);
+    alert('Failed to load student details.');
+  }
+}
+
+async function saveStudent(event) {
+  event.preventDefault();
+
+  const userId = document.getElementById('studentUserId').value;
+  const data = {
+    username: document.getElementById('studentUsername').value,
+    email: document.getElementById('studentEmail').value,
+    first_name: document.getElementById('studentFirstName').value,
+    last_name: document.getElementById('studentLastName').value,
+    student_id: document.getElementById('studentStudentId').value,
+    course: parseInt(document.getElementById('studentCourse').value),
+    year_level: parseInt(document.getElementById('studentYearLevel').value),
+    status: document.getElementById('studentStatus').value
+  };
+
+  // Add password only for create
+  if (!isEditing) {
+    const password = document.getElementById('studentPassword').value;
+    if (password) {
+      data.password = password;
+    }
+  }
+
+  try {
+    const url = userId ? `/api/v1/students/${userId}/` : '/api/v1/students/';
+    const method = userId ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+      closeModal();
+      loadStudents();
+      alert(`Student ${userId ? 'updated' : 'created'} successfully!`);
+    } else {
+      const error = await response.json();
+      alert('Error: ' + JSON.stringify(error));
+    }
+  } catch (error) {
+    console.error('Error saving student:', error);
+    alert('Failed to save student.');
+  }
+}
+
+async function deleteStudent(userId, studentId) {
+  if (!confirm(`Are you sure you want to archive the student "${studentId}"?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/v1/students/${userId}/`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok || response.status === 204) {
+      loadStudents();
+      alert('Student archived successfully!');
+    } else {
+      alert('Failed to archive student.');
+    }
+  } catch (error) {
+    console.error('Error archiving student:', error);
+    alert('Failed to archive student.');
+  }
+}
+
+async function restoreStudent(userId, studentId) {
+  if (!confirm(`Are you sure you want to restore the student "${studentId}"?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/v1/students/${userId}/restore/`, {
+      method: 'POST'
+    });
+
+    if (response.ok) {
+      loadStudents();
+      alert('Student restored successfully!');
+    } else {
+      alert('Failed to restore student.');
+    }
+  } catch (error) {
+    console.error('Error restoring student:', error);
+    alert('Failed to restore student.');
+  }
+}
+
+function closeModal() {
+  document.getElementById('studentModal').classList.add('hidden');
+}
+</script>
+{% endblock %}
