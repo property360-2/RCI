@@ -1,0 +1,395 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Sections Management - Richwell College{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900">Sections Management</h1>
+          <p class="text-gray-600 mt-2">Manage class sections and enrollments</p>
+        </div>
+        <div class="flex space-x-3">
+          <button onclick="openCreateModal()" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add Section
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+      <div class="flex items-center space-x-4">
+        <div class="flex-1">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="Search sections by code..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            onkeyup="searchSections()"
+          >
+        </div>
+        <select id="courseFilter" onchange="loadSections()" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <option value="">All Courses</option>
+        </select>
+        <button onclick="toggleArchived()" id="archivedToggle" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+          Show Archived
+        </button>
+        <button onclick="loadSections()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sections Table -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div id="loadingState" class="p-8 text-center hidden">
+        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p class="mt-2 text-gray-600">Loading sections...</p>
+      </div>
+
+      <div id="sectionsTable">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Term</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slots Remaining</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="sectionsTableBody" class="bg-white divide-y divide-gray-200">
+            <!-- Sections will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="p-12 text-center hidden">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No sections found</h3>
+        <p class="mt-1 text-sm text-gray-500">Get started by creating a new section.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div id="sectionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+  <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-lg bg-white">
+    <div class="flex items-center justify-between mb-4">
+      <h3 id="modalTitle" class="text-xl font-bold text-gray-900">Add Section</h3>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <form id="sectionForm" onsubmit="saveSection(event)">
+      <input type="hidden" id="sectionId" name="id">
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Section Code *</label>
+          <input type="text" id="sectionCode" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., COMP101-A">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Course *</label>
+            <select id="sectionCourse" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="">Select Course</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Term *</label>
+            <select id="sectionTerm" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="">Select Term</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Capacity *</label>
+          <input type="number" id="sectionCapacity" required min="10" value="40" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="e.g., 40">
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center justify-end space-x-3">
+        <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+          Cancel
+        </button>
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+          Save Section
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let showArchived = false;
+let allSections = [];
+let allCourses = [];
+let allTerms = [];
+
+// Load sections, courses and terms on page load
+document.addEventListener('DOMContentLoaded', function() {
+  loadCourses();
+  loadTerms();
+  loadSections();
+});
+
+async function loadCourses() {
+  try {
+    const response = await fetch('/api/v1/courses/?archived=false');
+    allCourses = await response.json();
+
+    const courseFilter = document.getElementById('courseFilter');
+    const sectionCourse = document.getElementById('sectionCourse');
+
+    allCourses.forEach(course => {
+      courseFilter.innerHTML += `<option value="${course.id}">${course.code} - ${course.name}</option>`;
+      sectionCourse.innerHTML += `<option value="${course.id}">${course.code} - ${course.name}</option>`;
+    });
+  } catch (error) {
+    console.error('Error loading courses:', error);
+  }
+}
+
+async function loadTerms() {
+  try {
+    const response = await fetch('/api/v1/terms/?archived=false');
+    allTerms = await response.json();
+
+    const sectionTerm = document.getElementById('sectionTerm');
+
+    allTerms.forEach(term => {
+      sectionTerm.innerHTML += `<option value="${term.id}">${term.name}</option>`;
+    });
+  } catch (error) {
+    console.error('Error loading terms:', error);
+  }
+}
+
+async function loadSections() {
+  const loadingState = document.getElementById('loadingState');
+  const sectionsTable = document.getElementById('sectionsTable');
+  const emptyState = document.getElementById('emptyState');
+  const courseFilter = document.getElementById('courseFilter').value;
+
+  loadingState.classList.remove('hidden');
+  sectionsTable.classList.add('hidden');
+  emptyState.classList.add('hidden');
+
+  try {
+    let url = `/api/v1/sections/?archived=${showArchived}`;
+    if (courseFilter) {
+      url += `&course=${courseFilter}`;
+    }
+
+    const response = await fetch(url);
+    const sections = await response.json();
+    allSections = sections;
+
+    displaySections(sections);
+  } catch (error) {
+    console.error('Error loading sections:', error);
+    alert('Failed to load sections. Please try again.');
+  } finally {
+    loadingState.classList.add('hidden');
+  }
+}
+
+function displaySections(sections) {
+  const tbody = document.getElementById('sectionsTableBody');
+  const sectionsTable = document.getElementById('sectionsTable');
+  const emptyState = document.getElementById('emptyState');
+
+  if (sections.length === 0) {
+    sectionsTable.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    return;
+  }
+
+  sectionsTable.classList.remove('hidden');
+  emptyState.classList.add('hidden');
+
+  tbody.innerHTML = sections.map(section => `
+    <tr class="hover:bg-gray-50">
+      <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-gray-900">${section.code}</div>
+      </td>
+      <td class="px-6 py-4">
+        <div class="text-sm text-gray-900">${section.course_code || '-'}</div>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm text-gray-500">${section.term_name || '-'}</div>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm text-gray-900">${section.capacity || '-'}</div>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm text-gray-900">${section.slots_remaining || 0} / ${section.capacity || 0}</div>
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap">
+        ${section.archived
+          ? '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Archived</span>'
+          : '<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Active</span>'
+        }
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+        <div class="flex items-center justify-end space-x-2">
+          ${!section.archived ? `
+            <button onclick="editSection(${section.id})" class="text-blue-600 hover:text-blue-900">Edit</button>
+            <button onclick="deleteSection(${section.id}, '${section.code}')" class="text-red-600 hover:text-red-900">Archive</button>
+          ` : `
+            <button onclick="restoreSection(${section.id}, '${section.code}')" class="text-green-600 hover:text-green-900">Restore</button>
+          `}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function searchSections() {
+  const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+  const filtered = allSections.filter(section =>
+    section.code.toLowerCase().includes(searchTerm)
+  );
+  displaySections(filtered);
+}
+
+function toggleArchived() {
+  showArchived = !showArchived;
+  const button = document.getElementById('archivedToggle');
+  button.textContent = showArchived ? 'Hide Archived' : 'Show Archived';
+  loadSections();
+}
+
+function openCreateModal() {
+  document.getElementById('modalTitle').textContent = 'Add Section';
+  document.getElementById('sectionForm').reset();
+  document.getElementById('sectionId').value = '';
+  document.getElementById('sectionCapacity').value = '40';
+  document.getElementById('sectionModal').classList.remove('hidden');
+}
+
+async function editSection(id) {
+  try {
+    const response = await fetch(`/api/v1/sections/${id}/`);
+    const section = await response.json();
+
+    document.getElementById('modalTitle').textContent = 'Edit Section';
+    document.getElementById('sectionId').value = section.id;
+    document.getElementById('sectionCode').value = section.code;
+    document.getElementById('sectionCourse').value = section.course;
+    document.getElementById('sectionTerm').value = section.term;
+    document.getElementById('sectionCapacity').value = section.capacity;
+    document.getElementById('sectionModal').classList.remove('hidden');
+  } catch (error) {
+    console.error('Error loading section:', error);
+    alert('Failed to load section details.');
+  }
+}
+
+async function saveSection(event) {
+  event.preventDefault();
+
+  const id = document.getElementById('sectionId').value;
+  const data = {
+    code: document.getElementById('sectionCode').value,
+    course: parseInt(document.getElementById('sectionCourse').value),
+    term: parseInt(document.getElementById('sectionTerm').value),
+    capacity: parseInt(document.getElementById('sectionCapacity').value)
+  };
+
+  try {
+    const url = id ? `/api/v1/sections/${id}/` : '/api/v1/sections/';
+    const method = id ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data)
+    });
+
+    if (response.ok) {
+      closeModal();
+      loadSections();
+      alert(`Section ${id ? 'updated' : 'created'} successfully!`);
+    } else {
+      const error = await response.json();
+      alert('Error: ' + JSON.stringify(error));
+    }
+  } catch (error) {
+    console.error('Error saving section:', error);
+    alert('Failed to save section.');
+  }
+}
+
+async function deleteSection(id, code) {
+  if (!confirm(`Are you sure you want to archive the section "${code}"?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/v1/sections/${id}/`, {
+      method: 'DELETE'
+    });
+
+    if (response.ok || response.status === 204) {
+      loadSections();
+      alert('Section archived successfully!');
+    } else {
+      alert('Failed to archive section.');
+    }
+  } catch (error) {
+    console.error('Error archiving section:', error);
+    alert('Failed to archive section.');
+  }
+}
+
+async function restoreSection(id, code) {
+  if (!confirm(`Are you sure you want to restore the section "${code}"?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/v1/sections/${id}/restore/`, {
+      method: 'POST'
+    });
+
+    if (response.ok) {
+      loadSections();
+      alert('Section restored successfully!');
+    } else {
+      alert('Failed to restore section.');
+    }
+  } catch (error) {
+    console.error('Error restoring section:', error);
+    alert('Failed to restore section.');
+  }
+}
+
+function closeModal() {
+  document.getElementById('sectionModal').classList.add('hidden');
+}
+</script>
+{% endblock %}

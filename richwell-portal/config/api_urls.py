@@ -15,11 +15,16 @@ from rest_framework_simplejwt.views import (
 # Import viewsets
 from courses.viewsets import CourseViewSet
 from subjects.viewsets import SubjectViewSet
+from sections.viewsets import SectionViewSet, AssignedSubjectViewSet
+from students.viewsets import StudentViewSet
 
 # Create router and register viewsets
 router = DefaultRouter()
 router.register(r'courses', CourseViewSet, basename='course')
 router.register(r'subjects', SubjectViewSet, basename='subject')
+router.register(r'sections', SectionViewSet, basename='section')
+router.register(r'assigned-subjects', AssignedSubjectViewSet, basename='assigned-subject')
+router.register(r'students', StudentViewSet, basename='student')
 
 # URL patterns
 urlpatterns = [
