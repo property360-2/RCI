@@ -17,8 +17,8 @@ urlpatterns = [
     path('enrollment/create/', views.placeholder_view, name='enrollment_create'),
     path('students/', views.placeholder_view, name='students_list'),
     path('my-sections/', views.placeholder_view, name='my_sections'),
-    path('grade-encoding/', views.placeholder_view, name='grade_encoding'),
-    path('my-grades/', views.placeholder_view, name='my_grades'),
+    path('grade-encoding/', views.grade_encoding_view, name='grade_encoding'),
+    path('my-grades/', views.my_grades_view, name='my_grades'),
     path('my-enrollments/', views.placeholder_view, name='my_enrollments'),
     path('analytics/', views.placeholder_view, name='analytics'),
 ]

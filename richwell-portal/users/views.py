@@ -17,15 +17,21 @@ Version: 3.0
 Last Updated: 2024
 """
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
+from django.core.cache import cache
+from django.db.models import Q
 
 from .models import User
+from sections.models import AssignedSubject, Section
+from enrollments.models import Enrollment
+from grades.models import GradeRecord
+from terms.models import Term
 
 
 @csrf_protect
@@ -66,7 +72,7 @@ def login_view(request):
     - CSRF protection enabled
     - Password field never echoed back
     - Session timeout configurable
-    - Failed login attempt logging (TODO: implement rate limiting)
+    - Rate limiting: 5 failed attempts per 15 minutes per IP
     """
     # Redirect authenticated users to their dashboard
     if request.user.is_authenticated:
@@ -76,6 +82,20 @@ def login_view(request):
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
         remember = request.POST.get('remember') == 'on'
+
+        # Rate limiting: Check failed login attempts
+        ip_address = request.META.get('REMOTE_ADDR', 'unknown')
+        cache_key = f'login_attempts_{ip_address}'
+        attempts = cache.get(cache_key, 0)
+
+        # Block if too many attempts
+        if attempts >= 5:
+            error_html = '''
+                <div class="rounded-lg p-4 bg-red-100 text-red-800">
+                    <strong>Too Many Attempts:</strong> Please wait 15 minutes before trying again.
+                </div>
+            '''
+            return HttpResponse(error_html)
 
         # Validate input
         if not username or not password:
@@ -103,6 +123,9 @@ def login_view(request):
             # Login user and create session
             login(request, user)
 
+            # Reset failed login attempts on successful login
+            cache.delete(cache_key)
+
             # Set session expiry based on "remember me"
             if not remember:
                 # Session expires when browser closes
@@ -120,10 +143,14 @@ def login_view(request):
             return response
 
         else:
+            # Increment failed login attempts
+            cache.set(cache_key, attempts + 1, 900)  # 900 seconds = 15 minutes
+
             # Invalid credentials
-            error_html = '''
+            remaining_attempts = 4 - attempts
+            error_html = f'''
                 <div class="rounded-lg p-4 bg-red-100 text-red-800">
-                    <strong>Error:</strong> Invalid username or password. Please try again.
+                    <strong>Error:</strong> Invalid username or password. {remaining_attempts} attempts remaining.
                 </div>
             '''
             return HttpResponse(error_html)
@@ -295,6 +322,172 @@ def profile_view(request):
         'page_title': 'User Profile',
         'message': 'Profile page is under development.'
     })
+
+
+@login_required
+def grade_encoding_view(request):
+    """
+    Grade encoding interface for professors.
+
+    Allows professors to view their assigned sections and encode grades
+    for students in those sections.
+
+    **Access Control:** PROFESSOR role only
+
+    **Features:**
+    - View all assigned sections
+    - See student lists per section
+    - Encode/update grades
+    - View grade statistics
+
+    **Returns:**
+        HttpResponse: Rendered grade encoding template for professors
+    """
+    # Only professors can access
+    if request.user.role != User.Role.PROFESSOR:
+        messages.error(request, 'Access denied. This page is for professors only.')
+        return redirect('dashboard')
+
+    # Get all sections assigned to this professor
+    assigned_subjects = AssignedSubject.objects.filter(
+        professor=request.user,
+        archived=False
+    ).select_related('section', 'subject', 'section__term', 'section__course').order_by('-section__term', 'section__code')
+
+    # Prepare data for each assignment
+    assignments_data = []
+    for assignment in assigned_subjects:
+        # Get enrollments for this section and subject
+        enrollments = Enrollment.objects.filter(
+            section=assignment.section,
+            subject=assignment.subject,
+            status=Enrollment.EnrollmentStatus.CONFIRMED,
+            archived=False
+        ).select_related('student__user', 'student__course').prefetch_related('grade').order_by('student__student_id')
+
+        # Prepare student data with grades
+        students_data = []
+        for enrollment in enrollments:
+            student_info = {
+                'enrollment': enrollment,
+                'student': enrollment.student,
+                'student_id': enrollment.student.student_id,
+                'name': enrollment.student.user.get_full_name() or enrollment.student.user.username,
+                'grade': enrollment.get_grade(),
+                'has_grade': enrollment.has_grade(),
+            }
+            students_data.append(student_info)
+
+        assignments_data.append({
+            'assignment': assignment,
+            'section': assignment.section,
+            'subject': assignment.subject,
+            'term': assignment.section.term,
+            'students': students_data,
+            'student_count': len(students_data),
+        })
+
+    context = {
+        'assignments': assignments_data,
+        'grade_choices': GradeRecord.Grade.choices,
+    }
+
+    return render(request, 'pages/professor/grade_encoding.html', context)
+
+
+@login_required
+def my_grades_view(request):
+    """
+    Student transcript view showing all grades.
+
+    Displays a comprehensive transcript of all student grades organized
+    by term with GPA calculations.
+
+    **Access Control:** STUDENT role only
+
+    **Features:**
+    - View all grades by term
+    - See GPA per term
+    - View cumulative GPA
+    - See INC status and deadlines
+
+    **Returns:**
+        HttpResponse: Rendered my grades template for students
+    """
+    # Only students can access
+    if request.user.role != User.Role.STUDENT:
+        messages.error(request, 'Access denied. This page is for students only.')
+        return redirect('dashboard')
+
+    # Get student profile
+    try:
+        from students.models import Student
+        student = Student.objects.get(user=request.user, archived=False)
+    except Student.DoesNotExist:
+        messages.error(request, 'Student profile not found.')
+        return redirect('dashboard')
+
+    # Get all enrollments with grades, organized by term
+    enrollments = Enrollment.objects.filter(
+        student=student,
+        status=Enrollment.EnrollmentStatus.CONFIRMED,
+        archived=False
+    ).select_related('subject', 'term', 'section').prefetch_related('grade').order_by('-term__start_date', 'subject__code')
+
+    # Organize by term
+    terms_data = {}
+    for enrollment in enrollments:
+        term = enrollment.term
+        if term not in terms_data:
+            terms_data[term] = {
+                'term': term,
+                'enrollments': [],
+                'total_units': 0,
+                'total_grade_points': 0,
+                'counted_units': 0,  # For GPA calculation (excluding INC, DRP)
+            }
+
+        grade_obj = enrollment.get_grade()
+        grade_value = grade_obj.grade if grade_obj else None
+        grade_point = grade_obj.get_grade_point() if grade_obj else None
+
+        enrollment_data = {
+            'subject': enrollment.subject,
+            'section': enrollment.section,
+            'units': enrollment.units,
+            'grade': grade_value,
+            'grade_obj': grade_obj,
+            'remarks': grade_obj.remarks if grade_obj else '',
+        }
+
+        terms_data[term]['enrollments'].append(enrollment_data)
+        terms_data[term]['total_units'] += enrollment.units
+
+        # Calculate grade points for GPA (exclude INC, DRP, None)
+        if grade_point is not None:
+            terms_data[term]['total_grade_points'] += grade_point * enrollment.units
+            terms_data[term]['counted_units'] += enrollment.units
+
+    # Calculate GPA for each term
+    for term_data in terms_data.values():
+        if term_data['counted_units'] > 0:
+            term_data['gpa'] = round(term_data['total_grade_points'] / term_data['counted_units'], 2)
+        else:
+            term_data['gpa'] = None
+
+    # Calculate cumulative GPA
+    total_grade_points = sum(t['total_grade_points'] for t in terms_data.values())
+    total_counted_units = sum(t['counted_units'] for t in terms_data.values())
+    cumulative_gpa = round(total_grade_points / total_counted_units, 2) if total_counted_units > 0 else None
+
+    context = {
+        'student': student,
+        'terms_data': list(terms_data.values()),
+        'cumulative_gpa': cumulative_gpa,
+        'total_units': sum(t['total_units'] for t in terms_data.values()),
+    }
+
+    return render(request, 'pages/student/my_grades.html', context)
 
 
 @login_required
