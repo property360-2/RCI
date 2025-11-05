@@ -28,4 +28,5 @@ urlpatterns = [
 
     # Web application endpoints
     path("", include("users.urls")),
+    path("notifications/", include("notifications.urls")),
 ]
