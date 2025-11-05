@@ -491,6 +491,173 @@ def my_grades_view(request):
 
 
 @login_required
+def my_sections_view(request):
+    """
+    Professor's sections overview page.
+
+    Displays all sections assigned to the professor with detailed
+    information about enrollments, schedules, and teaching assignments.
+
+    **Access Control:** PROFESSOR role only
+
+    **Features:**
+    - View all assigned sections
+    - See enrollment statistics
+    - View schedules and room assignments
+    - Quick access to grade encoding
+    - Filter by current/past terms
+
+    **Returns:**
+        HttpResponse: Rendered my sections template for professors
+    """
+    # Only professors can access
+    if request.user.role != User.Role.PROFESSOR:
+        messages.error(request, 'Access denied. This page is for professors only.')
+        return redirect('dashboard')
+
+    # Get all sections assigned to this professor
+    assigned_subjects = AssignedSubject.objects.filter(
+        professor=request.user,
+        archived=False
+    ).select_related(
+        'section',
+        'subject',
+        'section__term',
+        'section__course'
+    ).order_by('-section__term__term_start', 'section__code', 'subject__code')
+
+    # Organize by section
+    sections_dict = {}
+    for assignment in assigned_subjects:
+        section = assignment.section
+        section_key = f"{section.id}"
+
+        if section_key not in sections_dict:
+            # Get enrollment count for this section
+            enrollment_count = section.get_enrollment_count()
+
+            sections_dict[section_key] = {
+                'section': section,
+                'term': section.term,
+                'course': section.course,
+                'assignments': [],
+                'total_students': enrollment_count,
+                'available_slots': section.slots_remaining,
+                'capacity': section.capacity,
+            }
+
+        # Add assignment to section
+        sections_dict[section_key]['assignments'].append({
+            'assignment': assignment,
+            'subject': assignment.subject,
+            'schedule': assignment.schedule,
+            'room': assignment.room,
+            'enrollment_count': assignment.get_enrollment_count(),
+        })
+
+    # Convert to list and sort
+    sections_data = list(sections_dict.values())
+
+    context = {
+        'sections': sections_data,
+        'total_sections': len(sections_data),
+        'total_subjects': assigned_subjects.count(),
+    }
+
+    return render(request, 'pages/professor/my_sections.html', context)
+
+
+@login_required
+def my_enrollments_view(request):
+    """
+    Student's enrollment history page.
+
+    Displays all enrollments (past and current) for the student
+    organized by term with status information.
+
+    **Access Control:** STUDENT role only
+
+    **Features:**
+    - View all enrollments by term
+    - See enrollment status (Pending, Confirmed, Cancelled)
+    - View subject details
+    - See section assignments
+    - Filter by term/status
+
+    **Returns:**
+        HttpResponse: Rendered my enrollments template for students
+    """
+    # Only students can access
+    if request.user.role != User.Role.STUDENT:
+        messages.error(request, 'Access denied. This page is for students only.')
+        return redirect('dashboard')
+
+    # Get student profile
+    try:
+        from students.models import Student
+        student = Student.objects.get(user=request.user, archived=False)
+    except Student.DoesNotExist:
+        messages.error(request, 'Student profile not found.')
+        return redirect('dashboard')
+
+    # Get all enrollments organized by term
+    enrollments = Enrollment.objects.filter(
+        student=student,
+        archived=False
+    ).select_related(
+        'subject',
+        'section',
+        'term'
+    ).prefetch_related('grade').order_by('-term__term_start', 'subject__code')
+
+    # Organize by term
+    terms_data = {}
+    for enrollment in enrollments:
+        term = enrollment.term
+        if term not in terms_data:
+            terms_data[term] = {
+                'term': term,
+                'enrollments': [],
+                'total_units': 0,
+                'confirmed_count': 0,
+                'pending_count': 0,
+                'cancelled_count': 0,
+            }
+
+        # Count by status
+        if enrollment.status == Enrollment.EnrollmentStatus.CONFIRMED:
+            terms_data[term]['confirmed_count'] += 1
+            terms_data[term]['total_units'] += enrollment.units
+        elif enrollment.status == Enrollment.EnrollmentStatus.PENDING:
+            terms_data[term]['pending_count'] += 1
+        elif enrollment.status == Enrollment.EnrollmentStatus.CANCELLED:
+            terms_data[term]['cancelled_count'] += 1
+
+        # Get grade if exists
+        grade_obj = enrollment.get_grade()
+
+        enrollment_data = {
+            'enrollment': enrollment,
+            'subject': enrollment.subject,
+            'section': enrollment.section,
+            'units': enrollment.units,
+            'status': enrollment.status,
+            'grade': grade_obj.grade if grade_obj else None,
+            'has_grade': enrollment.has_grade(),
+        }
+
+        terms_data[term]['enrollments'].append(enrollment_data)
+
+    context = {
+        'student': student,
+        'terms_data': list(terms_data.values()),
+        'total_enrollments': enrollments.count(),
+    }
+
+    return render(request, 'pages/student/my_enrollments.html', context)
+
+
+@login_required
 def placeholder_view(request):
     """
     Temporary placeholder for routes under development.
@@ -505,7 +672,6 @@ def placeholder_view(request):
         - /subjects/
         - /sections/
         - /students/
-        - /grade-encoding/
         - /analytics/
 
     **Context Variables:**
