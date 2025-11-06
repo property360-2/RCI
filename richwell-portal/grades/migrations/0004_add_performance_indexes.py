@@ -14,15 +14,8 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name='graderecord',
             index=models.Index(
-                fields=['student', 'term', 'archived'],
-                name='grade_student_term_idx'
-            ),
-        ),
-        migrations.AddIndex(
-            model_name='graderecord',
-            index=models.Index(
-                fields=['subject', 'term'],
-                name='grade_subject_term_idx'
+                fields=['enrollment', 'archived'],
+                name='grade_enrollment_arch_idx'
             ),
         ),
         migrations.AddIndex(
@@ -32,26 +25,33 @@ class Migration(migrations.Migration):
                 name='grade_value_arch_idx'
             ),
         ),
+        migrations.AddIndex(
+            model_name='graderecord',
+            index=models.Index(
+                fields=['encoded_by', 'encoded_at'],
+                name='grade_encoder_time_idx'
+            ),
+        ),
         # Add indexes for INC record queries
         migrations.AddIndex(
             model_name='increcord',
             index=models.Index(
-                fields=['status', 'deadline_date'],
-                name='inc_status_deadline_idx'
+                fields=['deadline', 'resolved_at'],
+                name='inc_deadline_resolved_idx'
             ),
         ),
         migrations.AddIndex(
             model_name='increcord',
             index=models.Index(
-                fields=['deadline_date', 'status'],
-                name='inc_deadline_status_idx'
+                fields=['enrollment', 'archived'],
+                name='inc_enrollment_arch_idx'
             ),
         ),
         migrations.AddIndex(
             model_name='increcord',
             index=models.Index(
-                fields=['grade_record', 'status'],
-                name='inc_grade_status_idx'
+                fields=['resolved_at', 'deadline'],
+                name='inc_resolved_deadline_idx'
             ),
         ),
     ]
