@@ -17,43 +17,7 @@
 {% if variant == None %}{% with variant="default" %}{% endwith %}{% endif %}
 {% if size == None %}{% with size="md" %}{% endwith %}{% endif %}
 
-{# Base classes #}
-{% with base_classes="inline-flex items-center font-medium rounded-full whitespace-nowrap" %}
-
-{# Variant classes #}
-{% if variant == "primary" %}
-  {% with variant_classes="bg-blue-100 text-blue-800" %}
-{% elif variant == "secondary" %}
-  {% with variant_classes="bg-gray-100 text-gray-800" %}
-{% elif variant == "success" %}
-  {% with variant_classes="bg-green-100 text-green-800" %}
-{% elif variant == "danger" %}
-  {% with variant_classes="bg-red-100 text-red-800" %}
-{% elif variant == "warning" %}
-  {% with variant_classes="bg-yellow-100 text-yellow-800" %}
-{% elif variant == "info" %}
-  {% with variant_classes="bg-cyan-100 text-cyan-800" %}
-{% elif variant == "dark" %}
-  {% with variant_classes="bg-gray-800 text-white" %}
-{% else %}
-  {% with variant_classes="bg-gray-100 text-gray-600" %}
-{% endif %}
-
-{# Size classes #}
-{% if size == "sm" %}
-  {% with size_classes="px-2 py-0.5 text-xs gap-1" %}
-{% elif size == "md" %}
-  {% with size_classes="px-2.5 py-1 text-xs gap-1.5" %}
-{% elif size == "lg" %}
-  {% with size_classes="px-3 py-1.5 text-sm gap-2" %}
-{% else %}
-  {% with size_classes="px-2.5 py-1 text-xs gap-1.5" %}
-{% endif %}
-
-{# Combine all classes #}
-{% with all_classes=base_classes|add:" "|add:variant_classes|add:" "|add:size_classes|add:" "|add:class %}
-
-<span class="{{ all_classes }}" {{ attrs|safe }}>
+<span class="inline-flex items-center font-medium rounded-full whitespace-nowrap {% if variant == 'primary' %}bg-blue-100 text-blue-800{% elif variant == 'secondary' %}bg-gray-100 text-gray-800{% elif variant == 'success' %}bg-green-100 text-green-800{% elif variant == 'danger' %}bg-red-100 text-red-800{% elif variant == 'warning' %}bg-yellow-100 text-yellow-800{% elif variant == 'info' %}bg-cyan-100 text-cyan-800{% elif variant == 'dark' %}bg-gray-800 text-white{% else %}bg-gray-100 text-gray-600{% endif %} {% if size == 'sm' %}px-2 py-0.5 text-xs gap-1{% elif size == 'lg' %}px-3 py-1.5 text-sm gap-2{% else %}px-2.5 py-1 text-xs gap-1.5{% endif %} {{ class }}" {{ attrs|safe }}>
   {# Status dot #}
   {% if dot %}
     <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
@@ -83,8 +47,3 @@
     </button>
   {% endif %}
 </span>
-
-{% endwith %}
-{% endwith %}
-{% endwith %}
-{% endwith %}
