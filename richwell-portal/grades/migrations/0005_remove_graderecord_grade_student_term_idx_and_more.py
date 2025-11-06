@@ -10,28 +10,29 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Remove indexes created in 0004_add_performance_indexes
         migrations.RemoveIndex(
             model_name="graderecord",
-            name="grade_student_term_idx",
-        ),
-        migrations.RemoveIndex(
-            model_name="graderecord",
-            name="grade_subject_term_idx",
+            name="grade_enrollment_arch_idx",
         ),
         migrations.RemoveIndex(
             model_name="graderecord",
             name="grade_value_arch_idx",
         ),
         migrations.RemoveIndex(
-            model_name="increcord",
-            name="inc_status_deadline_idx",
+            model_name="graderecord",
+            name="grade_encoder_time_idx",
         ),
         migrations.RemoveIndex(
             model_name="increcord",
-            name="inc_deadline_status_idx",
+            name="inc_deadline_resolved_idx",
         ),
         migrations.RemoveIndex(
             model_name="increcord",
-            name="inc_grade_status_idx",
+            name="inc_enrollment_arch_idx",
+        ),
+        migrations.RemoveIndex(
+            model_name="increcord",
+            name="inc_resolved_deadline_idx",
         ),
     ]

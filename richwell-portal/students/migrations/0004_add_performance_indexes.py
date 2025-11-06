@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name='student',
             index=models.Index(
-                fields=['enrollment_status', 'archived'],
+                fields=['status', 'archived'],
                 name='student_status_arch_idx'
             ),
         ),
