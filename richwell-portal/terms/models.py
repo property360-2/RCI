@@ -260,6 +260,39 @@ class Term(ArchiveMixin, TimeStampMixin):
             self.term_start <= today <= self.term_end
         )
 
+    def is_current(self):
+        """
+        Check if this term is current (classes are running).
+
+        Alias for is_in_session() for semantic clarity in enrollment context.
+
+        Returns:
+            bool: True if term is currently in session
+
+        Example:
+            ```python
+            if term.is_current():
+                # This is the current academic term
+            ```
+        """
+        return self.is_in_session()
+
+    def is_future(self):
+        """
+        Check if this term is in the future (hasn't started yet).
+
+        Returns:
+            bool: True if term hasn't started yet
+
+        Example:
+            ```python
+            if term.is_future():
+                # Allow enrollment for upcoming term
+            ```
+        """
+        today = timezone.now().date()
+        return not self.archived and today < self.term_start
+
     def get_status(self):
         """
         Get human-readable status of this term.

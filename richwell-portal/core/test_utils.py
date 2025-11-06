@@ -265,20 +265,22 @@ class TermFactory:
         from django.utils.text import slugify
 
         if name is None:
-            year = random.randint(2020, 2024)
+            year = random.randint(2025, 2026)
             semester = random.choice(['1st Semester', '2nd Semester', 'Summer'])
-            name = f'AY {year}-{year+1} {semester}'
+            name = f'AY {year}-{year+1} {semester} {random_string(4)}'
 
         if slug is None:
             slug = slugify(name)
 
+        # Create dates that are in the future to allow enrollments in tests
+        # Using 2026 dates to ensure they're in the future relative to test environment
         defaults = {
             'name': name,
             'slug': slug,
-            'term_start': datetime(2024, 1, 15).date(),
-            'term_end': datetime(2024, 6, 15).date(),
-            'enrollment_start': datetime(2024, 1, 1).date(),
-            'enrollment_end': datetime(2024, 1, 14).date(),
+            'term_start': datetime(2026, 1, 15).date(),
+            'term_end': datetime(2026, 6, 15).date(),
+            'enrollment_start': datetime(2026, 1, 1).date(),
+            'enrollment_end': datetime(2026, 3, 31).date(),
             'is_active': True
         }
         defaults.update(kwargs)
@@ -291,17 +293,20 @@ class SectionFactory:
     """Factory for creating Section instances."""
 
     @staticmethod
-    def create(name=None, term=None, **kwargs):
+    def create(code=None, course=None, term=None, **kwargs):
         """Create a section with the given parameters."""
         from sections.models import Section
 
-        if name is None:
-            name = f'Section {random_string()}'
+        if code is None:
+            code = f'SEC-{random_string()}'
+        if course is None:
+            course = CourseFactory.create()
         if term is None:
             term = TermFactory.create()
 
         defaults = {
-            'name': name,
+            'code': code,
+            'course': course,
             'term': term,
             'capacity': 30
         }
@@ -322,7 +327,8 @@ class AssignedSubjectFactory:
         if section is None:
             section = SectionFactory.create()
         if subject is None:
-            subject = SubjectFactory.create()
+            # Subject must belong to the same course as the section
+            subject = SubjectFactory.create(course=section.course)
         if professor is None:
             professor = UserFactory.create(role=User.Role.PROFESSOR)
 
@@ -349,10 +355,29 @@ class EnrollmentFactory:
 
         if student is None:
             student = StudentFactory.create()
+
+        # Determine course to use - prefer from subject if provided, otherwise create new
+        course = None
+        if subject is not None:
+            course = subject.course
+        elif section is not None:
+            course = section.course
+
+        # Create subject if not provided, ensuring it matches the course
         if subject is None:
-            subject = SubjectFactory.create()
+            if course is not None:
+                subject = SubjectFactory.create(course=course)
+            else:
+                subject = SubjectFactory.create()
+                course = subject.course
+
+        # Create section if not provided, ensuring it matches the course
         if section is None:
-            section = SectionFactory.create()
+            if term is not None:
+                section = SectionFactory.create(course=course, term=term)
+            else:
+                section = SectionFactory.create(course=course)
+
         if term is None:
             term = section.term
 
@@ -374,12 +399,24 @@ class GradeRecordFactory:
     """Factory for creating GradeRecord instances."""
 
     @staticmethod
-    def create(enrollment=None, grade=None, encoded_by=None, **kwargs):
+    def create(enrollment=None, student=None, subject=None, section=None, term=None,
+               grade=None, encoded_by=None, **kwargs):
         """Create a grade record with the given parameters."""
         from grades.models import GradeRecord
 
+        # If enrollment not provided, create one from individual parameters
         if enrollment is None:
-            enrollment = EnrollmentFactory.create()
+            enrollment_params = {}
+            if student is not None:
+                enrollment_params['student'] = student
+            if subject is not None:
+                enrollment_params['subject'] = subject
+            if section is not None:
+                enrollment_params['section'] = section
+            if term is not None:
+                enrollment_params['term'] = term
+            enrollment = EnrollmentFactory.create(**enrollment_params)
+
         if grade is None:
             grade = random.choice(['1.0', '1.5', '2.0', '2.5', '3.0'])
         if encoded_by is None:
@@ -400,16 +437,25 @@ class INCRecordFactory:
     """Factory for creating INCRecord instances."""
 
     @staticmethod
-    def create(enrollment=None, deadline=None, **kwargs):
+    def create(enrollment=None, grade_record=None, deadline=None, deadline_date=None, **kwargs):
         """Create an INC record with the given parameters."""
         from grades.models import INCRecord
+
+        # Support both 'enrollment' and 'grade_record' parameter names
+        if enrollment is None and grade_record is not None:
+            # If grade_record is provided, extract enrollment from it
+            enrollment = grade_record.enrollment
 
         if enrollment is None:
             enrollment = EnrollmentFactory.create()
 
+        # Support both 'deadline' and 'deadline_date' parameter names
         if deadline is None:
-            # Default to 6 months from now
-            deadline = (datetime.now() + timedelta(days=180)).date()
+            if deadline_date is not None:
+                deadline = deadline_date
+            else:
+                # Default to 6 months from now
+                deadline = (datetime.now() + timedelta(days=180)).date()
 
         defaults = {
             'enrollment': enrollment,
@@ -468,7 +514,7 @@ def create_test_data_set():
 
     # Create term and section
     term = TermFactory.create(name='AY 2024-2025 1st Semester', is_active=True)
-    section = SectionFactory.create(name='CS-1A', term=term)
+    section = SectionFactory.create(code='CS-1A', course=course, term=term)
 
     # Assign subjects to section
     assigned_subjects = []
