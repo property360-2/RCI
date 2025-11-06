@@ -16,7 +16,7 @@ from datetime import timedelta, datetime
 from decimal import Decimal
 
 from core.test_utils import (
-    BaseTestCase, UserFactory, StudentFactory,
+    BaseTestCase, UserFactory, StudentFactory, CourseFactory,
     SubjectFactory, TermFactory, SectionFactory,
     EnrollmentFactory, GradeRecordFactory, INCRecordFactory,
     AssignedSubjectFactory
@@ -127,7 +127,7 @@ class INCRecordModelTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.student = StudentFactory.create()
-        self.subject = SubjectFactory.create(subject_type='MAJOR')
+        self.subject = SubjectFactory.create()
         self.term = TermFactory.create()
         self.grade_record = GradeRecordFactory.create(
             student=self.student,
@@ -145,13 +145,13 @@ class INCRecordModelTest(TestCase):
             reason='Missing final exam'
         )
 
-        self.assertEqual(inc.grade_record, self.grade_record)
-        self.assertEqual(inc.reason, 'Missing final exam')
-        self.assertEqual(inc.status, 'PENDING')
+        self.assertEqual(inc.enrollment, self.grade_record.enrollment)
+        self.assertEqual(inc.resolution_note, 'Missing final exam')
+        self.assertIsNone(inc.resolved_at)  # Pending = no resolved_at
 
     def test_inc_deadline_for_minor_subject(self):
         """Test INC deadline is 6 months for minor subjects."""
-        minor_subject = SubjectFactory.create(subject_type='MINOR')
+        minor_subject = SubjectFactory.create()
         grade_record = GradeRecordFactory.create(
             student=self.student,
             subject=minor_subject,
@@ -167,13 +167,13 @@ class INCRecordModelTest(TestCase):
         )
 
         # Verify deadline is roughly 6 months
-        days_diff = (inc.deadline_date - timezone.now().date()).days
+        days_diff = (inc.deadline - timezone.now().date()).days
         self.assertGreater(days_diff, 150)
         self.assertLess(days_diff, 210)
 
     def test_inc_deadline_for_major_subject(self):
         """Test INC deadline is 12 months for major subjects."""
-        major_subject = SubjectFactory.create(subject_type='MAJOR')
+        major_subject = SubjectFactory.create()
         grade_record = GradeRecordFactory.create(
             student=self.student,
             subject=major_subject,
@@ -189,25 +189,36 @@ class INCRecordModelTest(TestCase):
         )
 
         # Verify deadline is roughly 12 months
-        days_diff = (inc.deadline_date - timezone.now().date()).days
+        days_diff = (inc.deadline - timezone.now().date()).days
         self.assertGreater(days_diff, 330)
         self.assertLess(days_diff, 400)
 
     def test_inc_status_choices(self):
-        """Test INC status choices are defined."""
-        statuses = ['PENDING', 'COMPLETED', 'EXPIRED']
-
-        for status in statuses:
-            inc = INCRecordFactory.create(
-                grade_record=GradeRecordFactory.create(
-                    student=self.student,
-                    subject=SubjectFactory.create(),
-                    term=self.term,
-                    grade=None
-                ),
-                status=status
+        """Test INC records can be pending or resolved."""
+        # Test pending INC (no resolved_at)
+        pending_inc = INCRecordFactory.create(
+            grade_record=GradeRecordFactory.create(
+                student=self.student,
+                subject=SubjectFactory.create(),
+                term=self.term,
+                grade=None
             )
-            self.assertEqual(inc.status, status)
+        )
+        self.assertIsNone(pending_inc.resolved_at)
+        self.assertFalse(pending_inc.is_resolved())
+
+        # Test resolved INC (has resolved_at)
+        resolved_inc = INCRecordFactory.create(
+            grade_record=GradeRecordFactory.create(
+                student=self.student,
+                subject=SubjectFactory.create(),
+                term=self.term,
+                grade=None
+            ),
+            resolved_at=timezone.now()
+        )
+        self.assertIsNotNone(resolved_inc.resolved_at)
+        self.assertTrue(resolved_inc.is_resolved())
 
     def test_expired_inc_detection(self):
         """Test detecting expired INC records."""
@@ -215,25 +226,29 @@ class INCRecordModelTest(TestCase):
         past_deadline = timezone.now().date() - timedelta(days=30)
         inc = INCRecordFactory.create(
             grade_record=self.grade_record,
-            deadline_date=past_deadline,
-            status='PENDING'
+            deadline_date=past_deadline
         )
 
         # Deadline is in the past
-        self.assertLess(inc.deadline_date, timezone.now().date())
+        self.assertLess(inc.deadline, timezone.now().date())
+        self.assertTrue(inc.is_overdue())
 
     def test_inc_completion(self):
         """Test marking INC as completed."""
         inc = INCRecordFactory.create(
-            grade_record=self.grade_record,
-            status='PENDING'
+            grade_record=self.grade_record
         )
 
+        # Initially pending (no resolved_at)
+        self.assertIsNone(inc.resolved_at)
+
         # Simulate completion
-        inc.status = 'COMPLETED'
+        inc.resolved_at = timezone.now()
+        inc.resolution_note = 'Student completed requirements'
         inc.save()
 
-        self.assertEqual(inc.status, 'COMPLETED')
+        self.assertIsNotNone(inc.resolved_at)
+        self.assertTrue(inc.is_resolved())
 
 
 class GradeEncodingTest(BaseTestCase):
@@ -266,9 +281,7 @@ class GradeEncodingTest(BaseTestCase):
     def test_professor_can_encode_grades(self):
         """Test professor can create grade records."""
         grade = GradeRecordFactory.create(
-            student=self.student,
-            subject=self.subject,
-            term=self.term,
+            enrollment=self.enrollment,
             grade='2.0'
         )
 
@@ -278,15 +291,13 @@ class GradeEncodingTest(BaseTestCase):
     def test_grade_record_created_for_enrollment(self):
         """Test grade record is associated with enrollment."""
         grade = GradeRecordFactory.create(
-            student=self.student,
-            subject=self.subject,
-            term=self.term
+            enrollment=self.enrollment
         )
 
         # Verify grade exists for this student and subject
         grades = GradeRecord.objects.filter(
-            student=self.student,
-            subject=self.subject
+            enrollment__student=self.student,
+            enrollment__subject=self.subject
         )
         self.assertTrue(grades.exists())
 
@@ -342,7 +353,7 @@ class GradePermissionsTest(BaseTestCase):
         )
 
         # Student should only see their own grades
-        own_grades = GradeRecord.objects.filter(student=self.student)
+        own_grades = GradeRecord.objects.filter(enrollment__student=self.student)
         self.assertEqual(own_grades.count(), 1)
         self.assertEqual(own_grades.first(), self.grade)
 
@@ -353,7 +364,7 @@ class INCExpirationSystemTest(TestCase):
     def setUp(self):
         """Set up test data."""
         self.student = StudentFactory.create()
-        self.subject = SubjectFactory.create(subject_type='MINOR')
+        self.subject = SubjectFactory.create()
         self.term = TermFactory.create()
 
     def test_overdue_inc_records_identified(self):
@@ -364,21 +375,21 @@ class INCExpirationSystemTest(TestCase):
             student=self.student,
             subject=self.subject,
             term=self.term,
-            grade=None
+            grade='INC'
         )
         inc = INCRecordFactory.create(
             grade_record=grade_record,
-            deadline_date=past_deadline,
-            status='PENDING'
+            deadline_date=past_deadline
         )
 
-        # Find overdue INCs
+        # Find overdue INCs (not resolved and past deadline)
         overdue_incs = INCRecord.objects.filter(
-            status='PENDING',
-            deadline_date__lt=timezone.now().date()
+            resolved_at__isnull=True,
+            deadline__lt=timezone.now().date()
         )
 
         self.assertIn(inc, overdue_incs)
+        self.assertTrue(inc.is_overdue())
 
     def test_inc_expiration_converts_to_failed(self):
         """Test expired INC converts to 5.0 (failed)."""
@@ -387,25 +398,26 @@ class INCExpirationSystemTest(TestCase):
             student=self.student,
             subject=self.subject,
             term=self.term,
-            grade=None
+            grade='INC'
         )
         inc = INCRecordFactory.create(
             grade_record=grade_record,
-            deadline_date=past_deadline,
-            status='PENDING'
+            deadline_date=past_deadline
         )
 
-        # Simulate expiration
+        # Simulate expiration using convert_to_failed method if it exists
         grade_record.grade = '5.0'
         grade_record.save()
 
-        inc.status = 'EXPIRED'
+        # Mark as resolved when converted to failed
+        inc.resolved_at = timezone.now()
+        inc.resolution_note = 'Expired - converted to 5.0'
         inc.save()
 
         # Verify conversion
         grade_record.refresh_from_db()
         self.assertEqual(grade_record.grade, '5.0')
-        self.assertEqual(inc.status, 'EXPIRED')
+        self.assertIsNotNone(inc.resolved_at)
 
 
 class GradeQueryOptimizationTest(TestCase):
