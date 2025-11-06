@@ -371,6 +371,23 @@ class Term(ArchiveMixin, TimeStampMixin):
         return cls.objects.filter(is_active=True, archived=False).first()
 
     @classmethod
+    def get_current_term(cls):
+        """
+        Get the current active term (alias for get_active_term).
+
+        Returns:
+            Term or None: The active term, or None if no term is active
+
+        Example:
+            ```python
+            current_term = Term.get_current_term()
+            if current_term:
+                # Use current term for operations
+            ```
+        """
+        return cls.get_active_term()
+
+    @classmethod
     def get_current_terms(cls):
         """
         Get all terms that are currently in session (classes running).
