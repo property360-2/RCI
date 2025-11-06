@@ -133,7 +133,7 @@ class StudentEnrollmentTest(BaseTestCase):
             term=self.term
         )
 
-        enrollments = self.student.enrollment_set.all()
+        enrollments = self.student.enrollments.all()
         self.assertEqual(enrollments.count(), 2)
 
 

@@ -194,7 +194,7 @@ class CourseFactory:
         if name is None:
             name = f'Test Course {random_string()}'
         if code is None:
-            code = f'TC{random.randint(100, 999)}'
+            code = f'TC{random_string(6).upper()}'
 
         defaults = {
             'name': name,
@@ -439,7 +439,7 @@ class INCRecordFactory:
     @staticmethod
     def create(enrollment=None, grade_record=None, deadline=None, deadline_date=None, **kwargs):
         """Create an INC record with the given parameters."""
-        from grades.models import INCRecord
+        from grades.models import INCRecord, GradeRecord
 
         # Support both 'enrollment' and 'grade_record' parameter names
         if enrollment is None and grade_record is not None:
@@ -457,11 +457,51 @@ class INCRecordFactory:
                 # Default to 6 months from now
                 deadline = (datetime.now() + timedelta(days=180)).date()
 
+        # Filter out legacy field names that don't exist in the model
+        valid_fields = {'enrollment', 'deadline', 'resolved_at', 'resolution_note', 'confirmed_by'}
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in valid_fields}
+
+        # Map legacy field names to current ones
+        if 'reason' in kwargs:
+            filtered_kwargs['resolution_note'] = kwargs['reason']
+        if 'status' in kwargs:
+            # 'status' was removed - if it was 'RESOLVED', set resolved_at
+            if kwargs['status'] == 'RESOLVED' and 'resolved_at' not in filtered_kwargs:
+                from django.utils import timezone
+                filtered_kwargs['resolved_at'] = timezone.now()
+
+        # Ensure the enrollment has an INC grade (required by validation)
+        if not hasattr(enrollment, 'grade') or enrollment.grade.grade != 'INC':
+            # Create or update grade record to INC
+            if hasattr(enrollment, 'grade'):
+                enrollment.grade.grade = 'INC'
+                enrollment.grade.save()
+            else:
+                GradeRecord.objects.create(
+                    enrollment=enrollment,
+                    grade='INC',
+                    encoded_by=UserFactory.create(role=User.Role.PROFESSOR)
+                )
+
+        # Check if INCRecord already exists for this enrollment (OneToOne relationship)
+        # This check must happen AFTER ensuring the grade is INC, in case creating/updating
+        # the GradeRecord to INC automatically creates an INCRecord
+        try:
+            existing_inc = INCRecord.objects.get(enrollment=enrollment)
+            # If an INCRecord already exists, update and return it instead
+            existing_inc.deadline = deadline
+            for key, value in filtered_kwargs.items():
+                setattr(existing_inc, key, value)
+            existing_inc.save()
+            return existing_inc
+        except INCRecord.DoesNotExist:
+            pass
+
         defaults = {
             'enrollment': enrollment,
             'deadline': deadline
         }
-        defaults.update(kwargs)
+        defaults.update(filtered_kwargs)
 
         inc_record = INCRecord.objects.create(**defaults)
         return inc_record
