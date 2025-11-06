@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('enrollments', '0002_initial'),
+        ('enrollments', '0003_alter_enrollment_options_alter_enrollment_section_and_more'),
     ]
 
     operations = [

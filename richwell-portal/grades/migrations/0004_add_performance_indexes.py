@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('grades', '0003_remove_increcord_completion_date_and_more'),
+        ('grades', '0003_alter_graderecord_options_alter_increcord_options_and_more'),
     ]
 
     operations = [
