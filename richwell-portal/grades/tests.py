@@ -42,28 +42,27 @@ class GradeRecordModelTest(TestCase):
             student=self.student,
             subject=self.subject,
             term=self.term,
-            grade=Decimal('2.00')
+            grade='2.0'
         )
 
-        self.assertEqual(grade.student, self.student)
-        self.assertEqual(grade.subject, self.subject)
-        self.assertEqual(grade.term, self.term)
-        self.assertEqual(grade.grade, Decimal('2.00'))
+        self.assertEqual(grade.enrollment.student, self.student)
+        self.assertEqual(grade.enrollment.subject, self.subject)
+        self.assertEqual(grade.enrollment.term, self.term)
+        self.assertEqual(grade.grade, '2.0')
 
     def test_grade_choices_are_valid(self):
         """Test all grade choices are defined."""
         # Valid grades in the system
         valid_grades = [
-            Decimal('1.00'), Decimal('1.25'), Decimal('1.50'),
-            Decimal('1.75'), Decimal('2.00'), Decimal('2.25'),
-            Decimal('2.50'), Decimal('2.75'), Decimal('3.00'),
-            Decimal('5.00')
+            '1.0', '1.5', '2.0', '2.5', '3.0', '5.0', 'INC', 'DRP'
         ]
 
         for grade_value in valid_grades:
+            # Create a unique subject for each grade to avoid enrollment conflicts
+            subject = SubjectFactory.create()
             grade = GradeRecordFactory.create(
                 student=self.student,
-                subject=self.subject,
+                subject=subject,
                 term=self.term,
                 grade=grade_value
             )
@@ -82,9 +81,7 @@ class GradeRecordModelTest(TestCase):
 
     def test_passing_grade_identification(self):
         """Test identifying passing grades (1.0 - 3.0)."""
-        passing_grades = [
-            Decimal('1.00'), Decimal('2.00'), Decimal('3.00')
-        ]
+        passing_grades = ['1.0', '2.0', '3.0']
 
         for grade_value in passing_grades:
             grade = GradeRecordFactory.create(
@@ -94,7 +91,7 @@ class GradeRecordModelTest(TestCase):
                 grade=grade_value
             )
             # Grade is passing if <= 3.0
-            self.assertLessEqual(grade.grade, Decimal('3.00'))
+            self.assertIn(grade.grade, ['1.0', '1.5', '2.0', '2.5', '3.0'])
 
     def test_failing_grade_identification(self):
         """Test identifying failing grade (5.0)."""
@@ -102,10 +99,10 @@ class GradeRecordModelTest(TestCase):
             student=self.student,
             subject=self.subject,
             term=self.term,
-            grade=Decimal('5.00')
+            grade='5.0'
         )
 
-        self.assertEqual(grade.grade, Decimal('5.00'))
+        self.assertEqual(grade.grade, '5.0')
 
     def test_grade_can_be_archived(self):
         """Test grade records can be archived."""
@@ -245,10 +242,11 @@ class GradeEncodingTest(BaseTestCase):
     def setUp(self):
         """Set up test data."""
         super().setUp()
-        self.student = StudentFactory.create()
-        self.subject = SubjectFactory.create()
+        self.course = CourseFactory.create()
+        self.student = StudentFactory.create(course=self.course)
+        self.subject = SubjectFactory.create(course=self.course)
         self.term = TermFactory.create()
-        self.section = SectionFactory.create(term=self.term)
+        self.section = SectionFactory.create(course=self.course, term=self.term)
 
         # Assign subject to professor
         self.assigned_subject = AssignedSubjectFactory.create(
@@ -261,6 +259,7 @@ class GradeEncodingTest(BaseTestCase):
         self.enrollment = EnrollmentFactory.create(
             student=self.student,
             section=self.section,
+            subject=self.subject,
             term=self.term
         )
 
@@ -270,11 +269,11 @@ class GradeEncodingTest(BaseTestCase):
             student=self.student,
             subject=self.subject,
             term=self.term,
-            grade=Decimal('2.00')
+            grade='2.0'
         )
 
         self.assertIsNotNone(grade)
-        self.assertEqual(grade.grade, Decimal('2.00'))
+        self.assertEqual(grade.grade, '2.0')
 
     def test_grade_record_created_for_enrollment(self):
         """Test grade record is associated with enrollment."""
@@ -306,7 +305,7 @@ class GradePermissionsTest(BaseTestCase):
             student=self.student,
             subject=self.subject,
             term=self.term,
-            grade=Decimal('2.00')
+            grade='2.0'
         )
 
     def test_student_can_view_own_grades(self):
@@ -397,7 +396,7 @@ class INCExpirationSystemTest(TestCase):
         )
 
         # Simulate expiration
-        grade_record.grade = Decimal('5.00')
+        grade_record.grade = '5.0'
         grade_record.save()
 
         inc.status = 'EXPIRED'
@@ -405,7 +404,7 @@ class INCExpirationSystemTest(TestCase):
 
         # Verify conversion
         grade_record.refresh_from_db()
-        self.assertEqual(grade_record.grade, Decimal('5.00'))
+        self.assertEqual(grade_record.grade, '5.0')
         self.assertEqual(inc.status, 'EXPIRED')
 
 

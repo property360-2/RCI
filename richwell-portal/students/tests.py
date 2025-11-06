@@ -51,8 +51,8 @@ class StudentModelTest(TestCase):
 
     def test_student_default_status_is_active(self):
         """Test default enrollment status is ACTIVE."""
-        student = StudentFactory.create(enrollment_status='ACTIVE')
-        self.assertEqual(student.enrollment_status, 'ACTIVE')
+        student = StudentFactory.create(status='ACTIVE')
+        self.assertEqual(student.status, 'ACTIVE')
 
     def test_student_string_representation(self):
         """Test __str__ method returns student_id."""
@@ -115,12 +115,12 @@ class StudentEnrollmentTest(BaseTestCase):
 
         self.assertEqual(enrollment.student, self.student)
         self.assertEqual(enrollment.section, self.section)
-        self.assertEqual(enrollment.status, 'ENROLLED')
+        self.assertEqual(enrollment.status, 'CONFIRMED')
 
     def test_student_can_have_multiple_enrollments(self):
         """Test student can be enrolled in multiple sections."""
-        section1 = SectionFactory.create(term=self.term, name='Section A')
-        section2 = SectionFactory.create(term=self.term, name='Section B')
+        section1 = SectionFactory.create(term=self.term, code='Section A')
+        section2 = SectionFactory.create(term=self.term, code='Section B')
 
         enrollment1 = EnrollmentFactory.create(
             student=self.student,
@@ -153,13 +153,15 @@ class StudentGPACalculationTest(TestCase):
 
     def test_student_gpa_with_grades(self):
         """Test GPA calculation with multiple grades."""
+        from grades.models import GradeRecord
+
         # Create grade records
         # 1.0 * 3 units = 3.0
         GradeRecordFactory.create(
             student=self.student,
             subject=self.subject1,
             term=self.term,
-            grade=Decimal('1.00')
+            grade='1.0'
         )
 
         # 2.0 * 3 units = 6.0
@@ -167,7 +169,7 @@ class StudentGPACalculationTest(TestCase):
             student=self.student,
             subject=self.subject2,
             term=self.term,
-            grade=Decimal('2.00')
+            grade='2.0'
         )
 
         # 3.0 * 2 units = 6.0
@@ -175,12 +177,13 @@ class StudentGPACalculationTest(TestCase):
             student=self.student,
             subject=self.subject3,
             term=self.term,
-            grade=Decimal('3.00')
+            grade='3.0'
         )
 
         # Total: (3.0 + 6.0 + 6.0) / 8 units = 15.0 / 8 = 1.875
         # This test verifies grades exist
-        grades = self.student.graderecord_set.all()
+        enrollment_ids = self.student.enrollments.values_list('id', flat=True)
+        grades = GradeRecord.objects.filter(enrollment_id__in=enrollment_ids)
         self.assertEqual(grades.count(), 3)
 
 
@@ -203,16 +206,20 @@ class StudentTranscriptTest(TestCase):
 
     def test_transcript_includes_grades(self):
         """Test transcript includes grade records."""
+        from grades.models import GradeRecord
+
         GradeRecordFactory.create(
             student=self.student,
             subject=self.subject,
             term=self.term,
-            grade=Decimal('1.50')
+            grade='1.5'
         )
 
-        grades = self.student.graderecord_set.all()
+        # Get grades through enrollments
+        enrollment_ids = self.student.enrollments.values_list('id', flat=True)
+        grades = GradeRecord.objects.filter(enrollment_id__in=enrollment_ids)
         self.assertEqual(grades.count(), 1)
-        self.assertEqual(grades.first().grade, Decimal('1.50'))
+        self.assertEqual(grades.first().grade, '1.5')
 
 
 class StudentAPIPermissionsTest(BaseTestCase):
@@ -260,13 +267,13 @@ class StudentStatusTest(TestCase):
         statuses = ['ACTIVE', 'IRREGULAR', 'LOA', 'GRADUATED', 'DROPPED']
 
         for status in statuses:
-            student = StudentFactory.create(enrollment_status=status)
-            self.assertEqual(student.enrollment_status, status)
+            student = StudentFactory.create(status=status)
+            self.assertEqual(student.status, status)
 
     def test_active_student_can_enroll(self):
         """Test active students can enroll."""
-        student = StudentFactory.create(enrollment_status='ACTIVE')
-        self.assertEqual(student.enrollment_status, 'ACTIVE')
+        student = StudentFactory.create(status='ACTIVE')
+        self.assertEqual(student.status, 'ACTIVE')
 
     def test_archived_student_flagged(self):
         """Test archived students are properly flagged."""

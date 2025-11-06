@@ -175,14 +175,14 @@ class CanManageGrades(permissions.BasePermission):
         # Students can only view their own grades
         if request.user.role == 'STUDENT':
             if request.method in permissions.SAFE_METHODS:
-                return obj.student.user == request.user
+                return obj.enrollment.student.user == request.user
             return False
 
         # Professors can only manage grades for subjects they teach
         if request.user.role == 'PROFESSOR':
             from sections.models import AssignedSubject
             return AssignedSubject.objects.filter(
-                subject=obj.subject,
+                subject=obj.enrollment.subject,
                 professor=request.user
             ).exists()
 
