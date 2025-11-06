@@ -147,7 +147,7 @@ class StudentFactory:
     """Factory for creating Student instances."""
 
     @staticmethod
-    def create(user=None, student_id=None, **kwargs):
+    def create(user=None, student_id=None, course=None, **kwargs):
         """Create a student with the given parameters."""
         from students.models import Student
 
@@ -155,15 +155,18 @@ class StudentFactory:
             user = UserFactory.create(role=User.Role.STUDENT)
 
         if student_id is None:
-            student_id = f'{random.randint(2020, 2024)}{random.randint(1000, 9999)}'
+            student_id = f'{random.randint(2020, 2024)}-{random.randint(1000, 9999)}'
+
+        if course is None:
+            course = CourseFactory.create()
 
         defaults = {
             'user': user,
             'student_id': student_id,
-            'date_of_birth': datetime(2000, 1, 1).date(),
-            'contact_number': f'09{random.randint(100000000, 999999999)}',
-            'address': 'Test Address',
-            'enrollment_status': 'ACTIVE'
+            'course': course,
+            'status': 'ACTIVE',
+            'year_level': 1,
+            'documents': {}
         }
         defaults.update(kwargs)
 
@@ -197,7 +200,8 @@ class CourseFactory:
             'name': name,
             'code': code,
             'description': f'Description for {name}',
-            'duration_years': 4
+            'total_units': 120,
+            'years_to_complete': 4
         }
         defaults.update(kwargs)
 
@@ -234,7 +238,7 @@ class SubjectFactory:
             'code': code,
             'course': course,
             'units': 3,
-            'subject_type': 'MAJOR'
+            'year_level': 1
         }
         defaults.update(kwargs)
 
@@ -255,19 +259,26 @@ class TermFactory:
     """Factory for creating Term instances."""
 
     @staticmethod
-    def create(name=None, **kwargs):
+    def create(name=None, slug=None, **kwargs):
         """Create a term with the given parameters."""
         from terms.models import Term
+        from django.utils.text import slugify
 
         if name is None:
             year = random.randint(2020, 2024)
             semester = random.choice(['1st Semester', '2nd Semester', 'Summer'])
             name = f'AY {year}-{year+1} {semester}'
 
+        if slug is None:
+            slug = slugify(name)
+
         defaults = {
             'name': name,
-            'start_date': datetime(2024, 1, 1).date(),
-            'end_date': datetime(2024, 6, 1).date(),
+            'slug': slug,
+            'term_start': datetime(2024, 1, 15).date(),
+            'term_end': datetime(2024, 6, 15).date(),
+            'enrollment_start': datetime(2024, 1, 1).date(),
+            'enrollment_end': datetime(2024, 1, 14).date(),
             'is_active': True
         }
         defaults.update(kwargs)
@@ -332,12 +343,14 @@ class EnrollmentFactory:
     """Factory for creating Enrollment instances."""
 
     @staticmethod
-    def create(student=None, section=None, term=None, **kwargs):
+    def create(student=None, subject=None, section=None, term=None, **kwargs):
         """Create an enrollment with the given parameters."""
         from enrollments.models import Enrollment
 
         if student is None:
             student = StudentFactory.create()
+        if subject is None:
+            subject = SubjectFactory.create()
         if section is None:
             section = SectionFactory.create()
         if term is None:
@@ -345,9 +358,11 @@ class EnrollmentFactory:
 
         defaults = {
             'student': student,
+            'subject': subject,
             'section': section,
             'term': term,
-            'status': 'ENROLLED'
+            'units': subject.units if hasattr(subject, 'units') else 3,
+            'status': 'CONFIRMED'
         }
         defaults.update(kwargs)
 
@@ -359,24 +374,21 @@ class GradeRecordFactory:
     """Factory for creating GradeRecord instances."""
 
     @staticmethod
-    def create(student=None, subject=None, term=None, grade=None, **kwargs):
+    def create(enrollment=None, grade=None, encoded_by=None, **kwargs):
         """Create a grade record with the given parameters."""
         from grades.models import GradeRecord
 
-        if student is None:
-            student = StudentFactory.create()
-        if subject is None:
-            subject = SubjectFactory.create()
-        if term is None:
-            term = TermFactory.create()
+        if enrollment is None:
+            enrollment = EnrollmentFactory.create()
         if grade is None:
-            grade = Decimal(random.choice(['1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00']))
+            grade = random.choice(['1.0', '1.5', '2.0', '2.5', '3.0'])
+        if encoded_by is None:
+            encoded_by = UserFactory.create(role=User.Role.PROFESSOR)
 
         defaults = {
-            'student': student,
-            'subject': subject,
-            'term': term,
-            'grade': grade
+            'enrollment': enrollment,
+            'grade': grade,
+            'encoded_by': encoded_by
         }
         defaults.update(kwargs)
 
@@ -388,22 +400,20 @@ class INCRecordFactory:
     """Factory for creating INCRecord instances."""
 
     @staticmethod
-    def create(grade_record=None, deadline_date=None, **kwargs):
+    def create(enrollment=None, deadline=None, **kwargs):
         """Create an INC record with the given parameters."""
         from grades.models import INCRecord
 
-        if grade_record is None:
-            grade_record = GradeRecordFactory.create(grade=None)
+        if enrollment is None:
+            enrollment = EnrollmentFactory.create()
 
-        if deadline_date is None:
+        if deadline is None:
             # Default to 6 months from now
-            deadline_date = (datetime.now() + timedelta(days=180)).date()
+            deadline = (datetime.now() + timedelta(days=180)).date()
 
         defaults = {
-            'grade_record': grade_record,
-            'reason': 'Test reason for incomplete grade',
-            'deadline_date': deadline_date,
-            'status': 'PENDING'
+            'enrollment': enrollment,
+            'deadline': deadline
         }
         defaults.update(kwargs)
 
@@ -474,35 +484,35 @@ def create_test_data_set():
     students = StudentFactory.create_batch(10)
     enrollments = []
     for student in students:
-        enrollment = EnrollmentFactory.create(
-            student=student,
-            section=section,
-            term=term
-        )
-        enrollments.append(enrollment)
+        for subject in subjects[:3]:
+            enrollment = EnrollmentFactory.create(
+                student=student,
+                subject=subject,
+                section=section,
+                term=term
+            )
+            enrollments.append(enrollment)
 
     # Create some grades
     grades = []
-    for student in students[:5]:
-        for subject in subjects[:3]:
-            grade = GradeRecordFactory.create(
-                student=student,
-                subject=subject,
-                term=term
-            )
-            grades.append(grade)
+    for enrollment in enrollments[:15]:
+        grade = GradeRecordFactory.create(
+            enrollment=enrollment,
+            encoded_by=professor
+        )
+        grades.append(grade)
 
     # Create some INC records
     inc_records = []
     for student in students[5:7]:
-        for subject in subjects[:2]:
-            grade = GradeRecordFactory.create(
+        for subject in subjects[3:5]:
+            enrollment = EnrollmentFactory.create(
                 student=student,
                 subject=subject,
-                term=term,
-                grade=None
+                section=section,
+                term=term
             )
-            inc = INCRecordFactory.create(grade_record=grade)
+            inc = INCRecordFactory.create(enrollment=enrollment)
             inc_records.append(inc)
 
     return {
